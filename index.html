@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>参数化果盘生成器</title>
+    <style>
+        @font-face {
+            font-family: "Old Standard TT Local";
+            src: url("./Old_Standard_TT/OldStandardTT-Regular.ttf") format("truetype");
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Old Standard TT Local";
+            src: url("./Old_Standard_TT/OldStandardTT-Bold.ttf") format("truetype");
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Old Standard TT Local";
+            src: url("./Old_Standard_TT/OldStandardTT-Italic.ttf") format("truetype");
+            font-weight: 400;
+            font-style: italic;
+            font-display: swap;
+        }
+        :root {
+            --ink: #2f3338;
+            --ink-soft: #6f757e;
+            --line: rgba(120, 128, 138, 0.32);
+            --panel: rgba(243, 243, 243, 0.92);
+            --panel-strong: rgba(250, 250, 250, 0.98);
+            --glow: 0 4px 14px rgba(60, 64, 70, 0.12);
+            --btn: #e6e7e9;
+            --btn-ink: #2a2e34;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", "Old Standard TT Local", "Times New Roman", serif;
+            color: var(--ink);
+            background: linear-gradient(225deg, #f6f6f4 0%, #eeeeec 52%, #d8d8d6 100%);
+        }
+
+        body::before {
+            content: none;
+        }
+
+        body::after {
+            content: none;
+        }
+
+        .bg-crosses {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .bg-cross {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(20, 24, 30, 0.58);
+            opacity: 0.68;
+        }
+
+        #canvas-container {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 24px;
+            left: 40px;
+            right: 40px;
+            z-index: 18;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .brand {
+            font-size: 10px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: #4b5058;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 22px;
+            color: #6d737c;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .nav-cta {
+            padding: 10px 14px;
+            border-radius: 4px;
+            border: 1px solid var(--line);
+            background: #e7e8ea;
+            color: #42464d;
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .title-cluster {
+            position: fixed;
+            left: 42px;
+            top: 56px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .title-cn {
+            margin: 0 0 10px;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-weight: 500;
+            font-size: clamp(14px, 1.2vw, 18px);
+            line-height: 1;
+            letter-spacing: 0.28em;
+            color: rgba(79, 84, 92, 0.9);
+            transform: scaleX(0.92);
+            transform-origin: left center;
+        }
+
+        .title-meta {
+            margin: 0 0 10px 2px;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            font-size: 9px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: rgba(102, 108, 117, 0.75);
+        }
+
+        .title-en {
+            margin: 0;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            font-size: clamp(62px, 7.4vw, 120px);
+            line-height: 0.88;
+            letter-spacing: -0.075em;
+            color: rgba(52, 56, 63, 0.9);
+            filter: none;
+            transform: translateX(-2px);
+            opacity: 0.94;
+            text-transform: lowercase;
+            white-space: nowrap;
+        }
+
+        .title-desc {
+            margin: 12px 0 0 8px;
+            width: auto;
+            max-width: none;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-size: 11px;
+            line-height: 1.75;
+            color: #676d76;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        .control-dock {
+            position: fixed;
+            left: 40px;
+            top: 300px;
+            width: 390px;
+            max-height: calc(100vh - 330px);
+            z-index: 20;
+            pointer-events: auto;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            backdrop-filter: none;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 86%, rgba(0,0,0,0) 100%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 86%, rgba(0,0,0,0) 100%);
+        }
+
+        .dock-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 0 18px;
+            border-bottom: 1px solid rgba(72, 78, 88, 0.32);
+        }
+
+        .dock-tab {
+            position: relative;
+            border: 0;
+            background: none;
+            color: #545a63;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-size: 10px;
+            padding: 9px 10px 6px;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+        }
+
+        .dock-tab.active {
+            color: var(--btn-ink);
+        }
+
+        .dock-tab.active::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 10px;
+            right: 10px;
+            height: 1px;
+            background: rgba(36, 42, 50, 0.82);
+        }
+
+        .dock-view {
+            display: none;
+            min-height: 0;
+        }
+
+        .dock-view.active {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel-header {
+            padding: 18px 0 18px;
+            border-bottom: 1px solid rgba(72, 78, 88, 0.32);
+        }
+
+        .eyebrow {
+            margin: 0;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            color: #676e78;
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .panel-title {
+            margin: 6px 0 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #3d434b;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+        }
+
+        .panel-subtitle {
+            margin: 7px 0 0;
+            color: #727983;
+            font-size: 11px;
+            line-height: 1.4;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+        }
+
+        .chat-messages,
+        .params-scroll {
+            overflow-y: auto;
+            min-height: 0;
+            padding: 0 0 90px;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            scrollbar-width: none;
+        }
+
+        .chat-messages::-webkit-scrollbar,
+        .params-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .message {
+            max-width: 92%;
+            border-radius: 13px;
+            padding: 10px 11px;
+            font-size: 11px;
+            line-height: 1.5;
+            white-space: pre-line;
+            animation: fadeIn 0.26s ease;
+        }
+
+        .bot-message {
+            color: #525962;
+            border: 1px solid rgba(112, 120, 131, 0.28);
+            background: transparent;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            color: #2b3037;
+            border: 1px solid rgba(95, 103, 114, 0.34);
+            background: transparent;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px 12px;
+            border-top: 1px solid rgba(198, 182, 161, 0.13);
+        }
+
+        #chat-input,
+        select,
+        input[type="number"] {
+            width: 100%;
+            border: 1px solid rgba(104, 112, 123, 0.3);
+            background: transparent;
+            color: #3a3f46;
+            border-radius: 4px;
+            padding: 9px 10px;
+            outline: none;
+            font-size: 11px;
+        }
+
+        #chat-input:focus,
+        select:focus,
+        input[type="number"]:focus {
+            border-color: rgba(72, 79, 89, 0.5);
+            box-shadow: none;
+        }
+
+        #send-btn {
+            border: 1px solid rgba(86, 94, 105, 0.42);
+            border-radius: 4px;
+            background: transparent;
+            color: #2c3138;
+            padding: 0 15px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .param-group {
+            margin-bottom: 0;
+            border-radius: 0;
+            border: 0;
+            border-bottom: 1px solid rgba(72, 78, 88, 0.32);
+            background: transparent;
+            padding: 18px 0 20px;
+        }
+
+        .param-group h4 {
+            margin: 0 0 8px;
+            font-size: 11px;
+            color: #4c525b;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+        }
+
+        .slider-container {
+            margin-bottom: 8px;
+        }
+
+        .slider-container:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-container label,
+        .control-label {
+            display: block;
+            margin-bottom: 4px;
+            color: #666d76;
+            font-size: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 20px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 1px;
+            background: rgba(74, 82, 94, 0.78);
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 1px;
+            background: rgba(74, 82, 94, 0.78);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border: 1px solid rgba(72, 80, 91, 0.72);
+            background: #e0e2e3;
+            box-shadow: none;
+            transform: rotate(45deg);
+            margin-top: -7px;
+            border-radius: 1px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border: 1px solid rgba(72, 80, 91, 0.72);
+            background: #e0e2e3;
+            box-shadow: none;
+            transform: rotate(45deg);
+            border-radius: 1px;
+        }
+
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .mode-btn {
+            border-radius: 4px;
+            border: 1px solid rgba(106, 114, 125, 0.27);
+            background: transparent;
+            color: #59606a;
+            padding: 7px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .mode-btn.active {
+            background: transparent;
+            border-color: rgba(54, 62, 72, 0.48);
+            color: #2f343b;
+        }
+
+        .color-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #666e78;
+            font-size: 10px;
+        }
+
+        #color-picker {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            border: 1px solid rgba(173, 184, 199, 0.24);
+            background: transparent;
+            padding: 0;
+        }
+
+        .coord-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #66707c;
+            font-size: 10px;
+        }
+
+        .checkbox-label input {
+            accent-color: #b9c5d7;
+        }
+
+        .mini-note {
+            margin-top: 6px;
+            color: #6d7680;
+            font-size: 9px;
+            line-height: 1.4;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pill {
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 9px;
+            color: #6d7782;
+            border: 1px solid rgba(160, 172, 188, 0.18);
+            background: rgba(232, 234, 237, 0.88);
+        }
+
+        #texture-type {
+            display: none;
+        }
+
+        .craft-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px 6px;
+            margin-top: 2px;
+        }
+
+        .craft-btn {
+            display: grid;
+            justify-items: center;
+            gap: 4px;
+            border: 1px solid rgba(107, 115, 127, 0.28);
+            border-radius: 4px;
+            background: transparent;
+            color: #687280;
+            font-size: 9px;
+            padding: 6px 4px 7px;
+            cursor: pointer;
+        }
+
+        .craft-btn.active {
+            border-color: rgba(53, 60, 68, 0.5);
+            box-shadow: none;
+            color: #3f454d;
+        }
+
+        .craft-dot {
+            width: 29px;
+            height: 29px;
+            border-radius: 50%;
+            border: 1px solid rgba(206, 215, 227, 0.2);
+            box-shadow: inset 0 2px 6px rgba(255,255,255,0.2), 0 3px 10px rgba(0,0,0,0.36);
+        }
+
+        .craft-dot.brushed { background: repeating-linear-gradient(100deg, #c9cdd2 0 2px, #8f969f 2px 5px, #b1b7bf 5px 7px); }
+        .craft-dot.matte { background: linear-gradient(145deg, #c2c7ce 0%, #8c949f 100%); }
+        .craft-dot.sandblasted { background: radial-gradient(circle at 28% 22%, #d9dde3 0%, #a8afb9 45%, #7f8792 100%); }
+        .craft-dot.florentine { background: repeating-linear-gradient(45deg, #ced2d8 0 2px, #8d949e 2px 4px), repeating-linear-gradient(-45deg, rgba(188, 195, 205,0.5) 0 2px, rgba(108,115,124,0.6) 2px 4px); }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        @media (max-width: 980px) {
+            body {
+                overflow: auto;
+            }
+
+            .top-nav {
+                left: 16px;
+                right: 16px;
+                top: 14px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .title-cluster {
+                left: 16px;
+                top: 52px;
+            }
+
+            .title-en {
+                font-size: clamp(58px, 13vw, 96px);
+            }
+
+            .title-desc {
+                width: calc(100vw - 32px);
+                margin-left: 0;
+            }
+
+            .control-dock {
+                left: 16px;
+                right: 16px;
+                width: auto;
+                top: 285px;
+                bottom: auto;
+                max-height: calc(100vh - 315px);
+            }
+        }
+
+        .quote-display {
+            position: fixed;
+            right: 42px;
+            bottom: 34px;
+            z-index: 19;
+            pointer-events: none;
+            text-align: right;
+            color: rgba(48, 53, 61, 0.86);
+        }
+
+        .quote-label {
+            margin: 0 0 4px;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            font-size: 10px;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: rgba(82, 89, 99, 0.72);
+        }
+
+        .quote-value {
+            margin: 0;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            font-size: clamp(58px, 7.2vw, 112px);
+            line-height: 0.9;
+            letter-spacing: -0.055em;
+            font-variant-numeric: tabular-nums lining-nums;
+        }
+
+        .quote-note {
+            margin: 7px 0 0;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            color: rgba(88, 96, 108, 0.68);
+        }
+
+        .quote-logic { display: none; }
+    </style>
+</head>
+<body>
+<div class="bg-crosses" id="bg-crosses"></div>
+<div id="canvas-container"></div>
+
+<header class="top-nav">
+    <div class="brand">BUQI OBJECT STUDY</div>
+    <div class="nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</header>
+
+<section class="title-cluster">
+    <h1 class="title-cn">不器之器</h1>
+    <p class="title-en">the unbounded vessel</p>
+    <p class="title-desc">安静、克制的东方器物语言。呈现参数雕塑与材质实验的当代品牌表达。</p>
+</section>
+
+<div class="control-dock">
+    <div class="dock-switch">
+        <button type="button" id="tab-chat" class="dock-tab active">语言驱动</button>
+        <button type="button" id="tab-params" class="dock-tab">参数面板</button>
+    </div>
+
+    <div id="chat-view" class="dock-view active">
+        <div class="panel-header">
+            <p class="eyebrow">Design Assistant</p>
+            <h2 class="panel-title">语言驱动调形</h2>
+            <p class="panel-subtitle">现在可以直接对话调整边数、胖瘦、内部变化1/2、分叉、框粗度、圆角，以及材质与预览模式。</p>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">可以直接说：
+“边数改成 6”
+“胖一点，分叉大一点”
+“内部变化1到 7”
+“内部变化2到 3”
+“框粗一点，圆角大一点”
+“拉丝、粗糙度 0.3”</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="例如：边数改成6、胖一点、分叉减少、框粗一点">
+            <button id="send-btn">发送</button>
+        </div>
+    </div>
+
+    <div id="params-view" class="dock-view">
+        <div class="panel-header">
+            <p class="eyebrow">Parametric Controls</p>
+            <h2 class="panel-title">参数面板</h2>
+            <p class="panel-subtitle">形态参数按 GH 语义：多边骨架、内部变化1/2、分叉、框粗度与圆角，先二维结构后浅盘化。</p>
+        </div>
+        <div class="params-scroll">
+            <div class="param-group">
+                <h4>1. 形态参数</h4>
+                <div class="slider-container">
+                    <label>1. 边数: <span id="sides-value">5</span></label>
+                    <input type="range" id="sides-slider" min="3" max="9" step="1" value="5">
+                </div>
+                <div class="slider-container">
+                    <label>2. 胖瘦: <span id="fatness-value">5</span></label>
+                    <input type="range" id="fatness-slider" min="0" max="9" step="1" value="5">
+                </div>
+                <div class="slider-container">
+                    <label>3. 内部变化1: <span id="internal-variation-1-value">5</span></label>
+                    <input type="range" id="internal-variation-1-slider" min="0" max="9" step="1" value="5">
+                </div>
+                <div class="slider-container">
+                    <label>4. 内部变化2: <span id="internal-variation-2-value">5</span></label>
+                    <input type="range" id="internal-variation-2-slider" min="0" max="9" step="1" value="5">
+                </div>
+                <div class="slider-container">
+                    <label>5. 分叉: <span id="branch-value-value">4</span></label>
+                    <input type="range" id="branch-value-slider" min="0" max="9" step="1" value="4">
+                </div>
+                <div class="slider-container">
+                    <label>6. 框粗度: <span id="frame-thickness-value">3</span></label>
+                    <input type="range" id="frame-thickness-slider" min="0" max="9" step="1" value="3">
+                </div>
+                <div class="slider-container">
+                    <label>7. 框圆角: <span id="corner-roundness-value">4</span></label>
+                    <input type="range" id="corner-roundness-slider" min="0" max="9" step="1" value="4">
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h4>2. 材质参数</h4>
+                <div class="color-preview">
+                    <input type="color" id="color-picker" value="#c7ccd4">
+                    <span>主体颜色</span>
+                </div>
+                <div class="slider-container">
+                    <label>粗糙度: <span id="roughness-value">0.18</span></label>
+                    <input type="range" id="roughness-slider" min="0.03" max="0.75" step="0.01" value="0.18">
+                </div>
+                <div class="slider-container">
+                    <label>金属度: <span id="metalness-value">0.96</span></label>
+                    <input type="range" id="metalness-slider" min="0.6" max="1" step="0.01" value="0.96">
+                </div>
+                <div class="slider-container">
+                    <label class="control-label">纹理工艺</label>
+                    <select id="texture-type">
+                        <option value="brushed">拉丝</option>
+                        <option value="matte" selected>哑光</option>
+                        <option value="sandblasted">喷砂</option>
+                        <option value="florentine">佛罗伦萨</option>
+                    </select>
+                    <div class="craft-grid" id="craft-grid">
+                        <button type="button" class="craft-btn active" data-texture="matte"><span class="craft-dot matte"></span>哑光</button>
+                        <button type="button" class="craft-btn" data-texture="sandblasted"><span class="craft-dot sandblasted"></span>喷砂</button>
+                        <button type="button" class="craft-btn" data-texture="brushed"><span class="craft-dot brushed"></span>拉丝</button>
+                        <button type="button" class="craft-btn" data-texture="florentine"><span class="craft-dot florentine"></span>佛罗伦萨</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h4>3. 预览模式</h4>
+                <div class="mode-buttons">
+                    <button id="mode-real" class="mode-btn active">实体材质</button>
+                    <button id="mode-white" class="mode-btn">白模</button>
+                    <button id="mode-wireframe" class="mode-btn">线框</button>
+                </div>
+                <div class="mini-note">白模和线框方便观察框架开孔、分叉尺度与圆角变化。</div>
+            </div>
+
+            <div class="param-group">
+                <h4>4. 摄影棚灯光</h4>
+                <div class="slider-container">
+                    <label>主灯总强度: <span id="light-intensity-value">2.8</span></label>
+                    <input type="range" id="light-intensity" min="2.8" max="2.8" step="0.01" value="2.8">
+                </div>
+                <div class="slider-container">
+                    <label>光照绕转速度: <span id="light-motion-speed-value">0.4</span></label>
+                    <input type="range" id="light-motion-speed" min="0.4" max="0.4" step="0.01" value="0.4">
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="shadow-toggle" checked>
+                    开启柔和阴影
+                </label>
+                <div class="mini-note">已改为主柔光、对侧补光、顶灯、背轮廓光与环境穹顶色的组合，不再是单灯直打。</div>
+            </div>
+
+            <div class="param-group">
+                <h4>5. 状态提示</h4>
+                <div class="pill-row">
+                    <span class="pill">多边骨架</span>
+                    <span class="pill">内部双变化</span>
+                    <span class="pill">结构分叉</span>
+                    <span class="pill">框粗可调</span>
+                    <span class="pill">棚拍布光</span>
+                    <span class="pill">黑棚质感</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<aside class="quote-display" aria-live="polite">
+    <p class="quote-label">Estimated Production Cost</p>
+    <p class="quote-value" id="quote-value">¥0000</p>
+    <p class="quote-note" id="quote-note">small-batch prototype quotation</p>
+</aside>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    class SceneManager {
+        constructor(containerId) {
+            this.container = document.getElementById(containerId);
+            this.scene = new THREE.Scene();
+            this.scene.background = null;
+            this.scene.fog = new THREE.Fog(0xe7e8ea, 14, 62);
+
+            this.camera = new THREE.PerspectiveCamera(28, 1, 0.1, 1000);
+            this.camera.position.set(7.2, 3.3, 5.9);
+            this.camera.lookAt(2.9, 0.42, -0.22);
+
+            this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.setClearColor(0x000000, 0);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.outputEncoding = THREE.sRGBEncoding;
+            this.renderer.physicallyCorrectLights = true;
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.renderer.toneMappingExposure = 1.16;
+            this.container.appendChild(this.renderer.domElement);
+
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.06;
+            this.controls.target.set(2.9, 0.38, -0.22);
+            this.controls.maxPolarAngle = Math.PI * 0.44;
+            this.controls.minDistance = 3.6;
+            this.controls.maxDistance = 10.2;
+            this.lightMotionSpeed = 0.4;
+
+            this.setupEnvironment();
+            this.currentModel = null;
+            this.startAnimation();
+        }
+
+        createVelvetTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            g.addColorStop(0, '#09090a');
+            g.addColorStop(0.45, '#111116');
+            g.addColorStop(1, '#060608');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < 170; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const rx = 80 + Math.random() * 220;
+                const ry = 16 + Math.random() * 90;
+                const rot = Math.random() * Math.PI;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rot);
+                const grad = ctx.createRadialGradient(0, 0, 1, 0, 0, rx);
+                grad.addColorStop(0, `rgba(${78 + Math.random() * 55},${65 + Math.random() * 45},${66 + Math.random() * 55},${0.08 + Math.random() * 0.07})`);
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.scale(1, ry / rx);
+                ctx.beginPath();
+                ctx.arc(0, 0, rx, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            for (let i = 0; i < 2600; i++) {
+                const c = 20 + Math.random() * 45;
+                ctx.fillStyle = `rgba(${c},${c},${c + 5},${0.045 + Math.random() * 0.04})`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2.2, 2.2);
+            return texture;
+        }
+
+        setupEnvironment() {
+            this.scene.add(new THREE.HemisphereLight(0xdde5f3, 0x05070a, 0.18));
+
+            this.keyLight = new THREE.SpotLight(0xf1f3f6, 2.8, 34, Math.PI * 0.36, 0.78, 1.08);
+            this.keyLight.position.set(3.0, 8.4, 2.3);
+            this.keyLight.castShadow = true;
+            this.keyLight.shadow.mapSize.width = 2048;
+            this.keyLight.shadow.mapSize.height = 2048;
+            this.keyLight.shadow.camera.near = 0.3;
+            this.keyLight.shadow.camera.far = 22;
+            this.keyLight.shadow.radius = 22;
+            this.keyLight.shadow.bias = -0.00008;
+            this.keyLight.target.position.set(2.9, 0.22, -0.24);
+            this.scene.add(this.keyLight.target);
+            this.scene.add(this.keyLight);
+
+            this.fillLight = new THREE.DirectionalLight(0xb6bcc8, 0.11);
+            this.fillLight.position.set(-4.9, 1.5, 2.1);
+            this.scene.add(this.fillLight);
+            this.frontFillLight = new THREE.RectAreaLight(0xf9faf9, 6.2, 8.8, 5.2);
+            this.frontFillLight.position.set(7.1, 2.5, 6.8);
+            this.frontFillLight.lookAt(3.8, 0.28, -0.28);
+            this.scene.add(this.frontFillLight);
+
+            this.overheadLight = new THREE.DirectionalLight(0xf1f4f8, 0.72);
+            this.overheadLight.position.set(2.2, 6.8, 2.0);
+            this.scene.add(this.overheadLight);
+
+            this.rimLight = new THREE.DirectionalLight(0xc0c9da, 0.56);
+            this.rimLight.position.set(-4.1, 2.4, -5.8);
+            this.scene.add(this.rimLight);
+
+            this.kickerA = new THREE.PointLight(0xd7e0ef, 0.08, 18, 2);
+            this.kickerA.position.set(3.9, 1.0, -2.8);
+            this.scene.add(this.kickerA);
+
+            this.kickerB = new THREE.PointLight(0xa9b2c4, 0.05, 16, 2);
+            this.kickerB.position.set(-2.9, 0.8, 3.5);
+            this.scene.add(this.kickerB);
+
+            const shadowPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(18, 14),
+                new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.18, transparent: true })
+            );
+            shadowPlane.rotation.x = -Math.PI / 2;
+            shadowPlane.position.y = -0.558;
+            shadowPlane.receiveShadow = true;
+            this.scene.add(shadowPlane);
+
+            const softGroundShadow = new THREE.Mesh(
+                new THREE.PlaneGeometry(10.6, 7.6),
+                new THREE.MeshBasicMaterial({
+                    map: this.createGroundShadowTexture(),
+                    transparent: true,
+                    opacity: 0.42,
+                    depthWrite: false
+                })
+            );
+            softGroundShadow.rotation.x = -Math.PI / 2;
+            softGroundShadow.position.set(4.18, -0.546, -0.58);
+            this.scene.add(softGroundShadow);
+
+            const backdrop = new THREE.Mesh(
+                new THREE.SphereGeometry(34, 48, 48),
+                new THREE.MeshBasicMaterial({
+                    color: 0xeaeaec,
+                    side: THREE.BackSide,
+                    transparent: true,
+                    opacity: 0.16
+                })
+            );
+            this.scene.add(backdrop);
+        }
+
+        setLightMotionSpeed(value) {
+            this.lightMotionSpeed = value;
+        }
+
+        setLightPosition(x, y, z) {
+            this.keyLight.position.set(x, y, z);
+            this.keyLight.target.position.set(x * 0.52, 0.22, z * -0.12);
+            this.fillLight.position.set(-x * 1.16, Math.max(1.1, y * 0.28), z * 0.42);
+            this.rimLight.position.set(-x * 0.7, Math.max(1.35, y * 0.36), -z * 1.22);
+            this.kickerA.position.set(x * 0.84, 0.92, -z * 0.56);
+            this.frontFillLight.lookAt(3.88, 0.18, -0.28);
+        }
+
+        setLightIntensity(value) {
+            this.keyLight.intensity = value;
+            this.fillLight.intensity = value * 0.1;
+            this.overheadLight.intensity = value * 0.52;
+            this.rimLight.intensity = value * 0.36;
+            this.kickerA.intensity = value * 0.06;
+            this.kickerB.intensity = value * 0.04;
+            this.frontFillLight.intensity = value * 2.1;
+        }
+
+        setShadowEnabled(enabled) {
+            this.keyLight.castShadow = enabled;
+            this.renderer.shadowMap.enabled = enabled;
+        }
+
+        updateModel(mesh) {
+            if (this.currentModel) {
+                this.scene.remove(this.currentModel);
+                this.currentModel.geometry.dispose();
+            }
+            this.currentModel = mesh;
+            mesh.castShadow = true;
+            mesh.receiveShadow = false;
+            mesh.position.set(3.88, -0.03, -0.28);
+            mesh.scale.set(0.8, 1.42, 0.8);
+            this.scene.add(mesh);
+        }
+
+        createGroundShadowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            const contact = ctx.createRadialGradient(232, 260, 20, 232, 260, 130);
+            contact.addColorStop(0, 'rgba(0,0,0,0.48)');
+            contact.addColorStop(0.32, 'rgba(0,0,0,0.28)');
+            contact.addColorStop(0.68, 'rgba(0,0,0,0.10)');
+            contact.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = contact;
+            ctx.fillRect(0, 0, 512, 512);
+
+            const cast = ctx.createRadialGradient(308, 282, 44, 308, 282, 248);
+            cast.addColorStop(0, 'rgba(0,0,0,0.22)');
+            cast.addColorStop(0.46, 'rgba(0,0,0,0.12)');
+            cast.addColorStop(0.82, 'rgba(0,0,0,0.05)');
+            cast.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = cast;
+            ctx.fillRect(0, 0, 512, 512);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        startAnimation() {
+            const animate = () => {
+                requestAnimationFrame(animate);
+                const t = performance.now() * 0.001 * this.lightMotionSpeed;
+                const x = 3 + Math.sin(t) * 3; // 0 -> 6
+                this.setLightPosition(x, 8.4, 2.3);
+                this.controls.update();
+                this.renderer.render(this.scene, this.camera);
+            };
+            animate();
+        }
+
+        onResize() {
+            const width = this.container.clientWidth;
+            const height = this.container.clientHeight;
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
+    }
+
+    class GeometryGenerator {
+        static TAU = Math.PI * 2;
+
+        static clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        static lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        static normalizeParams(params) {
+            const sides = this.clamp(Math.round(params.sides ?? 5), 3, 9);
+            const fatness = this.clamp((params.fatness ?? 5) / 9, 0, 1);
+            const internalVariation1 = this.clamp(((params.internalVariation1 ?? params.innerMidAdjust) ?? 5) / 9, 0, 1);
+            const internalVariation2 = this.clamp(((params.internalVariation2 ?? params.innerVertexAdjust) ?? 5) / 9, 0, 1);
+            const branchValue = this.clamp((params.branchValue ?? 4) / 9, 0, 1);
+            const frameThickness = this.clamp((params.frameThickness ?? 5) / 9, 0, 1);
+            const cornerRoundness = this.clamp((params.cornerRoundness ?? 4) / 9, 0, 1);
+            const plateRadiusMm = params.plateRadiusMm ?? 210;
+            const radius = this.clamp(plateRadiusMm / 110, 1.62, 2.16);
+            const offsetBase = params.offsetDistance ?? radius * 0.2;
+            const ribBase = params.ribWidth ?? radius * 0.06;
+            const offsetDistance = this.clamp(offsetBase * this.lerp(0.7, 1.35, frameThickness), radius * 0.06, radius * 0.34);
+            const ribWidth = this.clamp(ribBase * this.lerp(0.55, 1.35, frameThickness), radius * 0.018, radius * 0.13);
+            return {
+                sides,
+                fatness,
+                internalVariation1,
+                internalVariation2,
+                branchValue,
+                frameThickness,
+                cornerRoundness,
+                offsetDistance,
+                ribWidth,
+                plateRadiusMm,
+                radius
+            };
+        }
+
+        static vec(x, y) { return { x, y }; }
+        static add(a, b) { return { x: a.x + b.x, y: a.y + b.y }; }
+        static sub(a, b) { return { x: a.x - b.x, y: a.y - b.y }; }
+        static mul(a, s) { return { x: a.x * s, y: a.y * s }; }
+        static len(a) { return Math.hypot(a.x, a.y); }
+        static normalize(a) {
+            const l = this.len(a);
+            return l < 1e-8 ? { x: 0, y: 0 } : { x: a.x / l, y: a.y / l };
+        }
+        static lerpPoint(a, b, t) { return { x: this.lerp(a.x, b.x, t), y: this.lerp(a.y, b.y, t) }; }
+
+        static smoothRing(points, amount) {
+            const n = points.length;
+            const out = [];
+            for (let i = 0; i < n; i++) {
+                const prev = points[(i - 1 + n) % n];
+                const curr = points[i];
+                const next = points[(i + 1) % n];
+                const avg = this.mul(this.add(prev, next), 0.5);
+                out.push(this.lerpPoint(curr, avg, amount));
+            }
+            return out;
+        }
+
+        static generateBaseRadialSkeleton(np) {
+            const sides = np.sides;
+            const step = this.TAU / sides;
+            const start = -Math.PI * 0.5;
+            const vertexAngles = [];
+            const midAngles = [];
+            const outerV = [];
+            const outerM = [];
+            const innerV = [];
+            const innerM = [];
+            const centerV = [];
+            const centerM = [];
+            const sectors = [];
+
+            const iv1 = np.internalVariation1;
+            const iv2 = np.internalVariation2;
+            const outerVertexScale = this.lerp(0.92, 1.07, np.fatness) * this.lerp(1.06, 0.94, iv2);
+            const outerMidScale = this.lerp(0.84, 1.13, np.fatness) * this.lerp(0.9, 1.12, iv1);
+            const innerBase = np.radius * this.lerp(0.36, 0.72, 1 - np.frameThickness) * this.lerp(0.86, 1.12, np.fatness);
+            const centerBase = np.radius * this.lerp(0.18, 0.36, np.frameThickness) * this.lerp(0.98, 0.84, np.fatness);
+
+            for (let i = 0; i < sides; i++) {
+                const aV = start + i * step;
+                const aM = aV + step * 0.5;
+                vertexAngles.push(aV);
+                midAngles.push(aM);
+
+                const ov = this.vec(Math.cos(aV) * np.radius * outerVertexScale, Math.sin(aV) * np.radius * outerVertexScale);
+                const om = this.vec(Math.cos(aM) * np.radius * outerMidScale, Math.sin(aM) * np.radius * outerMidScale);
+                const iv = this.vec(Math.cos(aV) * innerBase * this.lerp(0.78, 1.18, iv2), Math.sin(aV) * innerBase * this.lerp(0.78, 1.18, iv2));
+                const im = this.vec(Math.cos(aM) * innerBase * this.lerp(0.72, 1.26, iv1), Math.sin(aM) * innerBase * this.lerp(0.72, 1.26, iv1));
+                const cv = this.vec(Math.cos(aV) * centerBase * this.lerp(0.9, 1.08, iv2), Math.sin(aV) * centerBase * this.lerp(0.9, 1.08, iv2));
+                const cm = this.vec(Math.cos(aM) * centerBase * this.lerp(0.86, 1.14, iv1), Math.sin(aM) * centerBase * this.lerp(0.86, 1.14, iv1));
+
+                outerV.push(ov);
+                outerM.push(om);
+                innerV.push(iv);
+                innerM.push(im);
+                centerV.push(cv);
+                centerM.push(cm);
+            }
+
+            for (let i = 0; i < sides; i++) {
+                const ni = (i + 1) % sides;
+                sectors.push({
+                    index: i,
+                    angleMid: midAngles[i],
+                    outerVertexLeft: outerV[i],
+                    outerMid: outerM[i],
+                    outerVertexRight: outerV[ni],
+                    innerVertexLeft: innerV[i],
+                    innerMid: innerM[i],
+                    innerVertexRight: innerV[ni],
+                    centerVertexLeft: centerV[i],
+                    centerMid: centerM[i],
+                    centerVertexRight: centerV[ni]
+                });
+            }
+
+            return { sides, step, start, vertexAngles, midAngles, outerV, outerM, innerV, innerM, centerV, centerM, sectors };
+        }
+
+        static generateMainSlitFamily(skeleton, np) {
+            const iv1 = np.internalVariation1;
+            const iv2 = np.internalVariation2;
+            const baseWidth = np.radius * this.lerp(0.016, 0.078, 1 - np.frameThickness);
+            const lengthBias = this.lerp(0.36, 0.74, iv1);
+            const innerBias = this.lerp(0.34, 0.78, iv2);
+            const pinchBias = this.lerp(0.28, 0.72, 1 - iv1);
+            const shoulderBias = this.lerp(0.22, 0.66, iv2);
+
+            skeleton.sectors.forEach((sector) => {
+                const radial = this.vec(Math.cos(sector.angleMid), Math.sin(sector.angleMid));
+                const tangent = this.vec(-radial.y, radial.x);
+
+                const rOuter = this.len(this.lerpPoint(sector.innerMid, sector.outerMid, lengthBias));
+                const rShoulder = this.len(this.lerpPoint(sector.innerMid, sector.outerMid, this.lerp(0.22, 0.5, iv2)));
+                const rPinch = this.len(this.lerpPoint(sector.innerMid, sector.outerMid, this.lerp(0.12, 0.3, pinchBias)));
+                const rInner = this.len(this.lerpPoint(sector.centerMid, sector.innerMid, innerBias));
+
+                const pOuter = this.mul(radial, rOuter);
+                const pShoulder = this.mul(radial, rShoulder);
+                const pPinch = this.mul(radial, rPinch);
+                const pInner = this.mul(radial, rInner);
+
+                const wOuter = baseWidth * this.lerp(1.06, 0.82, np.fatness) * this.lerp(0.9, 1.16, iv1);
+                const wShoulder = baseWidth * this.lerp(0.76, 1.08, shoulderBias);
+                const wPinch = baseWidth * this.lerp(0.34, 0.74, pinchBias);
+                const wInner = baseWidth * this.lerp(0.54, 0.94, iv2);
+
+                sector.slit = {
+                    SOL: this.add(pOuter, this.mul(tangent, -wOuter)),
+                    SOR: this.add(pOuter, this.mul(tangent, wOuter)),
+                    SSL: this.add(pShoulder, this.mul(tangent, -wShoulder)),
+                    SSR: this.add(pShoulder, this.mul(tangent, wShoulder)),
+                    SPL: this.add(pPinch, this.mul(tangent, -wPinch)),
+                    SPR: this.add(pPinch, this.mul(tangent, wPinch)),
+                    SIL: this.add(pInner, this.mul(tangent, -wInner)),
+                    SIR: this.add(pInner, this.mul(tangent, wInner)),
+                    tangent
+                };
+            });
+            return skeleton;
+        }
+
+        static generateBranchSlitFamily(skeleton, np) {
+            const iv1 = np.internalVariation1;
+            const iv2 = np.internalVariation2;
+            const b = np.branchValue;
+            const branchLen = np.radius * this.lerp(0.001, 0.15, b) * this.lerp(0.86, 1.22, iv1);
+            const branchSpread = np.radius * this.lerp(0.001, 0.075, b) * this.lerp(0.82, 1.2, iv2);
+            const branchEmerge = this.lerp(0.1, 0.66, iv2);
+
+            skeleton.sectors.forEach((sector) => {
+                const s = sector.slit;
+                const leftAxis = this.normalize(this.sub(sector.innerVertexLeft, s.SIL));
+                const rightAxis = this.normalize(this.sub(sector.innerVertexRight, s.SIR));
+                const leftBase = this.lerpPoint(s.SIL, s.SPL, branchEmerge);
+                const rightBase = this.lerpPoint(s.SIR, s.SPR, branchEmerge);
+
+                const blIn = this.lerpPoint(s.SIL, s.SPL, this.lerp(0.06, 0.34, iv1));
+                const blOut = this.lerpPoint(s.SIL, s.SPL, this.lerp(0.56, 0.86, iv2));
+                const brIn = this.lerpPoint(s.SIR, s.SPR, this.lerp(0.06, 0.34, iv1));
+                const brOut = this.lerpPoint(s.SIR, s.SPR, this.lerp(0.56, 0.86, iv2));
+
+                const blTip = this.add(this.add(leftBase, this.mul(leftAxis, branchLen)), this.mul(s.tangent, -branchSpread));
+                const brTip = this.add(this.add(rightBase, this.mul(rightAxis, branchLen)), this.mul(s.tangent, branchSpread));
+
+                sector.slitLoop = [
+                    s.SOL,
+                    s.SOR,
+                    s.SSR,
+                    brOut,
+                    brTip,
+                    brIn,
+                    s.SIR,
+                    s.SIL,
+                    blIn,
+                    blTip,
+                    blOut,
+                    s.SSL
+                ];
+            });
+            return skeleton;
+        }
+
+        static buildFrameBands(skeleton) {
+            const globalVertices = [];
+            const faces = [];
+            const keyMap = new Map();
+
+            const addShared = (key, p, role) => {
+                if (keyMap.has(key)) return keyMap.get(key);
+                const idx = globalVertices.length;
+                globalVertices.push({ x: p.x, y: p.y, role });
+                keyMap.set(key, idx);
+                return idx;
+            };
+            const addLocal = (p, role) => {
+                const idx = globalVertices.length;
+                globalVertices.push({ x: p.x, y: p.y, role });
+                return idx;
+            };
+
+            const n = skeleton.sides;
+            const OV = new Array(n);
+            const IV = new Array(n);
+            const CV = new Array(n);
+            for (let i = 0; i < n; i++) {
+                OV[i] = addShared(`OV:${i}`, skeleton.outerV[i], 'outerVertex');
+                IV[i] = addShared(`IV:${i}`, skeleton.innerV[i], 'innerVertex');
+                CV[i] = addShared(`CV:${i}`, skeleton.centerV[i], 'centerVertex');
+            }
+
+            skeleton.sectors.forEach((sector) => {
+                const i = sector.index;
+                const ni = (i + 1) % n;
+                const oL = OV[i];
+                const oR = OV[ni];
+                const iL = IV[i];
+                const iR = IV[ni];
+                const cL = CV[i];
+                const cR = CV[ni];
+
+                const oM = addLocal(sector.outerMid, 'outerMid');
+                const iM = addLocal(sector.innerMid, 'innerMid');
+                const cM = addLocal(sector.centerMid, 'centerMid');
+                const slit = sector.slitLoop.map((p) => addLocal(p, 'slit'));
+                const [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11] = slit;
+
+                // Outer frame band
+                faces.push([oL, oM, s0]);
+                faces.push([oL, s0, s11]);
+                faces.push([oL, s11, iM]);
+                faces.push([oL, iM, iL]);
+
+                faces.push([oR, s1, oM]);
+                faces.push([oR, s2, s1]);
+                faces.push([oR, iM, s2]);
+                faces.push([oR, iR, iM]);
+
+                // Inner frame ring
+                faces.push([iL, iM, s11]);
+                faces.push([iL, s11, s10]);
+                faces.push([iL, s10, s9]);
+                faces.push([iL, s9, s8]);
+                faces.push([iL, s8, s7]);
+                faces.push([iL, s7, cM]);
+                faces.push([iL, cM, cL]);
+
+                faces.push([iR, cR, cM]);
+                faces.push([iR, cM, s6]);
+                faces.push([iR, s6, s5]);
+                faces.push([iR, s5, s4]);
+                faces.push([iR, s4, s3]);
+                faces.push([iR, s3, s2]);
+                faces.push([iR, s2, iM]);
+
+                // Center ring cap per sector
+                faces.push([cL, cM, cR]);
+            });
+
+            return { globalVertices, faces };
+        }
+
+        static roundStructuralCorners2D(frameData, np) {
+            const amt = np.cornerRoundness * 0.22;
+            if (amt < 0.001) return frameData;
+            const byRole = new Map();
+            frameData.globalVertices.forEach((v, i) => {
+                if (!byRole.has(v.role)) byRole.set(v.role, []);
+                byRole.get(v.role).push({ idx: i, p: { x: v.x, y: v.y } });
+            });
+
+            ['outerVertex', 'innerVertex', 'centerVertex'].forEach((role) => {
+                const ring = byRole.get(role);
+                if (!ring || ring.length < 3) return;
+                const smooth = this.smoothRing(ring.map((r) => r.p), amt * (role === 'outerVertex' ? 0.7 : 0.56));
+                smooth.forEach((p, k) => {
+                    frameData.globalVertices[ring[k].idx].x = p.x;
+                    frameData.globalVertices[ring[k].idx].y = p.y;
+                });
+            });
+
+            frameData.globalVertices.forEach((v) => {
+                if (v.role === 'slit') {
+                    v.x *= this.lerp(1, 0.985, amt);
+                    v.y *= this.lerp(1, 0.985, amt);
+                }
+            });
+
+            return frameData;
+        }
+
+        static generateFinal2DProfiles(frameData) {
+            return frameData;
+        }
+
+        static createStore() {
+            return { positions: [], uvs: [], colors: [] };
+        }
+
+        static uv(x, z, radius) {
+            return [x / (radius * 2.15) + 0.5, z / (radius * 2.15) + 0.5];
+        }
+
+        static pushTriangle(store, a, b, c, radius, color = [1, 1, 1]) {
+            const uva = this.uv(a.x, a.z, radius);
+            const uvb = this.uv(b.x, b.z, radius);
+            const uvc = this.uv(c.x, c.z, radius);
+            store.positions.push(
+                a.x, a.y, a.z,
+                b.x, b.y, b.z,
+                c.x, c.y, c.z
+            );
+            store.uvs.push(
+                uva[0], uva[1],
+                uvb[0], uvb[1],
+                uvc[0], uvc[1]
+            );
+            store.colors.push(
+                color[0], color[1], color[2],
+                color[0], color[1], color[2],
+                color[0], color[1], color[2]
+            );
+        }
+
+        static pushQuad(store, a, b, c, d, radius, color = [1, 1, 1]) {
+            this.pushTriangle(store, a, b, c, radius, color);
+            this.pushTriangle(store, a, c, d, radius, color);
+        }
+
+        static buildShallowDishShell(topology, faces, np) {
+            const radius = np.radius;
+            const shellThickness = this.lerp(radius * 0.019, radius * 0.029, np.frameThickness);
+            const dishDepth = this.lerp(radius * 0.045, radius * 0.078, 0.32 + np.fatness * 0.68);
+            const rimLift = this.lerp(radius * 0.008, radius * 0.022, np.frameThickness);
+            const topStore = this.createStore();
+            const bottomStore = this.createStore();
+            const sideStore = this.createStore();
+
+            const roleLift = (role) => {
+                if (role === 'outerVertex') return 0.006;
+                if (role === 'outerMid') return 0.01;
+                if (role === 'innerVertex') return -0.002;
+                if (role === 'innerMid') return -0.005;
+                if (role === 'centerVertex' || role === 'centerMid') return -0.009;
+                if (role === 'slit') return -0.004 - np.branchValue * 0.0025;
+                return 0;
+            };
+
+            const topPoints = topology.globalVertices.map((v) => {
+                const radial = this.clamp(Math.hypot(v.x, v.y) / radius, 0, 1);
+                const outerBand = rimLift * Math.pow(radial, 2.3);
+                const middleSlope = -dishDepth * 0.5 * this.clamp((0.84 - radial) / 0.84, 0, 1);
+                const centerDrop = -dishDepth * 0.5 * Math.pow(1 - radial, 2.2);
+                const dish = middleSlope + centerDrop;
+                const rim = outerBand;
+                const y = dish + rim + roleLift(v.role);
+                return { x: v.x, y, z: v.y, role: v.role };
+            });
+
+            const bottomPoints = topology.globalVertices.map((v, i) => {
+                const radial = this.clamp(Math.hypot(v.x, v.y) / radius, 0, 1);
+                const footLift = radius * 0.008 * Math.pow(1 - radial, 2.35);
+                return { x: v.x, y: topPoints[i].y - shellThickness + footLift, z: v.y, role: v.role };
+            });
+
+            for (let i = 0; i < faces.length; i++) {
+                const [a, b, c] = faces[i];
+                this.pushTriangle(topStore, topPoints[a], topPoints[b], topPoints[c], radius, [1, 1, 1]);
+                this.pushTriangle(bottomStore, bottomPoints[c], bottomPoints[b], bottomPoints[a], radius, [0.92, 0.92, 0.92]);
+            }
+
+            const edgeMap = new Map();
+            const addEdge = (a, b) => {
+                const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+                const prev = edgeMap.get(key);
+                if (!prev) edgeMap.set(key, { count: 1, a, b });
+                else prev.count += 1;
+            };
+            faces.forEach(([a, b, c]) => {
+                addEdge(a, b);
+                addEdge(b, c);
+                addEdge(c, a);
+            });
+
+            edgeMap.forEach((edge) => {
+                if (edge.count !== 1) return;
+                this.pushQuad(sideStore, topPoints[edge.a], topPoints[edge.b], bottomPoints[edge.b], bottomPoints[edge.a], radius, [0.95, 0.95, 0.95]);
+            });
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+                ...topStore.positions,
+                ...bottomStore.positions,
+                ...sideStore.positions
+            ]), 3));
+            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([
+                ...topStore.uvs,
+                ...bottomStore.uvs,
+                ...sideStore.uvs
+            ]), 2));
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([
+                ...topStore.colors,
+                ...bottomStore.colors,
+                ...sideStore.colors
+            ]), 3));
+            geometry.computeVertexNormals();
+                return geometry;
+            }
+
+        static generateFinalMesh(final2D, np) {
+            return this.buildShallowDishShell({ globalVertices: final2D.globalVertices }, final2D.faces, np);
+        }
+
+        static generatePlateGeometry(params) {
+            const np = this.normalizeParams(params);
+            let skeleton = this.generateBaseRadialSkeleton(np);
+            skeleton = this.generateMainSlitFamily(skeleton, np);
+            skeleton = this.generateBranchSlitFamily(skeleton, np);
+            let frameData = this.buildFrameBands(skeleton, np);
+            frameData = this.roundStructuralCorners2D(frameData, np);
+            const final2D = this.generateFinal2DProfiles(frameData);
+            return this.generateFinalMesh(final2D, np);
+        }
+    }
+
+    class MaterialController {
+        constructor(baseParams) {
+            this.baseColor = baseParams.color;
+            this.roughness = baseParams.roughness;
+            this.metalness = baseParams.metalness;
+            this.textureType = baseParams.textureType;
+            this.mode = 'real';
+        }
+
+        canvasTexture(canvas, repeatX = 2, repeatY = 2) {
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(repeatX, repeatY);
+            return texture;
+        }
+
+        createTextureCanvases(size = 1024) {
+            const createCanvas = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                return canvas;
+            };
+            return {
+                color: createCanvas(),
+                bump: createCanvas(),
+                roughness: createCanvas()
+            };
+        }
+
+        fillBaseCanvases(canvases, base = '#d2d2d2') {
+            const colorCtx = canvases.color.getContext('2d');
+            const bumpCtx = canvases.bump.getContext('2d');
+            const roughCtx = canvases.roughness.getContext('2d');
+            colorCtx.fillStyle = base;
+            colorCtx.fillRect(0, 0, canvases.color.width, canvases.color.height);
+            bumpCtx.fillStyle = '#808080';
+            bumpCtx.fillRect(0, 0, canvases.bump.width, canvases.bump.height);
+            roughCtx.fillStyle = '#7f7f7f';
+            roughCtx.fillRect(0, 0, canvases.roughness.width, canvases.roughness.height);
+            return { colorCtx, bumpCtx, roughCtx };
+        }
+
+        drawBrushedPattern(ctxSet, density = 380, power = 1) {
+            const { colorCtx, bumpCtx, roughCtx } = ctxSet;
+            const width = colorCtx.canvas.width;
+            const height = colorCtx.canvas.height;
+            for (let i = 0; i < density; i++) {
+                const x = Math.random() * width;
+                const y = Math.random() * height;
+                const dx = x - width / 2;
+                const dy = y - height / 2;
+                const baseAngle = Math.atan2(dy, dx) + Math.PI / 2;
+                const jitter = (Math.random() - 0.5) * 0.34;
+                const angle = baseAngle + jitter;
+                const len = 56 + Math.random() * 92;
+                const x1 = x - Math.cos(angle) * len * 0.5;
+                const y1 = y - Math.sin(angle) * len * 0.5;
+                const x2 = x + Math.cos(angle) * len * 0.5;
+                const y2 = y + Math.sin(angle) * len * 0.5;
+                const alpha = 0.05 + Math.random() * 0.08 * power;
+                colorCtx.strokeStyle = `rgba(232,232,232,${alpha * 0.6})`;
+                colorCtx.lineWidth = 1;
+                colorCtx.beginPath();
+                colorCtx.moveTo(x1, y1);
+                colorCtx.lineTo(x2, y2);
+                colorCtx.stroke();
+
+                const bumpTone = 128 + (Math.random() > 0.5 ? 34 : -34) * power;
+                bumpCtx.strokeStyle = `rgba(${bumpTone},${bumpTone},${bumpTone},${0.18 + Math.random() * 0.24})`;
+                bumpCtx.lineWidth = 1.1;
+                bumpCtx.beginPath();
+                bumpCtx.moveTo(x1, y1);
+                bumpCtx.lineTo(x2, y2);
+                bumpCtx.stroke();
+
+                const roughTone = 128 + (Math.random() > 0.5 ? 28 : -28);
+                roughCtx.strokeStyle = `rgba(${roughTone},${roughTone},${roughTone},0.22)`;
+                roughCtx.lineWidth = 1.5;
+                roughCtx.beginPath();
+                roughCtx.moveTo(x1, y1);
+                roughCtx.lineTo(x2, y2);
+                roughCtx.stroke();
+            }
+        }
+
+        generateTexturePack(type) {
+            const canvases = this.createTextureCanvases();
+            const ctxSet = this.fillBaseCanvases(canvases, '#d1d1d1');
+            const { colorCtx, bumpCtx, roughCtx } = ctxSet;
+            const width = canvases.color.width;
+            const height = canvases.color.height;
+            let repeat = [2, 2];
+            let bumpScale = 0;
+            let roughnessBias = 0;
+            let metalnessBias = 0;
+
+            if (type === 'brushed') {
+                this.drawBrushedPattern(ctxSet, 420, 0.62);
+                repeat = [2.6, 2.6];
+                bumpScale = 0.1;
+                roughnessBias = 0.05;
+            } else if (type === 'matte') {
+                colorCtx.fillStyle = '#b9b0a3';
+                colorCtx.fillRect(0, 0, width, height);
+                for (let i = 0; i < 4200; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const tone = 120 + Math.random() * 16;
+                    bumpCtx.fillStyle = `rgba(${tone},${tone},${tone},0.11)`;
+                    bumpCtx.fillRect(x, y, 1, 1);
+                    const r = 120 + Math.random() * 36;
+                    roughCtx.fillStyle = `rgba(${r},${r},${r},0.16)`;
+                    roughCtx.fillRect(x, y, 1, 1);
+                }
+                repeat = [1.7, 1.7];
+                bumpScale = 0.06;
+                roughnessBias = 0.24;
+                metalnessBias = -0.12;
+            } else if (type === 'sandblasted') {
+                colorCtx.fillStyle = '#c5bbad';
+                colorCtx.fillRect(0, 0, width, height);
+                for (let i = 0; i < 14000; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const t = 100 + Math.random() * 70;
+                    const a = 0.2 + Math.random() * 0.28;
+                    bumpCtx.fillStyle = `rgba(${t},${t},${t},${a})`;
+                    bumpCtx.fillRect(x, y, 1.2, 1.2);
+                    roughCtx.fillStyle = `rgba(${130 + Math.random() * 55},${130 + Math.random() * 55},${130 + Math.random() * 55},0.24)`;
+                    roughCtx.fillRect(x, y, 1.2, 1.2);
+                }
+                repeat = [2.8, 2.8];
+                bumpScale = 0.16;
+                roughnessBias = 0.22;
+                metalnessBias = -0.08;
+            } else if (type === 'florentine') {
+                colorCtx.fillStyle = '#c7b9a6';
+                colorCtx.fillRect(0, 0, width, height);
+                const step = 26;
+                for (let i = -width; i < width * 2; i += step) {
+                    bumpCtx.strokeStyle = 'rgba(200,200,200,0.09)';
+                    bumpCtx.lineWidth = 0.9;
+                    bumpCtx.beginPath();
+                    bumpCtx.moveTo(i, 0);
+                    bumpCtx.lineTo(i - width, height);
+                    bumpCtx.stroke();
+                    bumpCtx.strokeStyle = 'rgba(92,92,92,0.06)';
+                    bumpCtx.beginPath();
+                    bumpCtx.moveTo(i, 0);
+                    bumpCtx.lineTo(i + width, height);
+                    bumpCtx.stroke();
+
+                    roughCtx.strokeStyle = 'rgba(88,88,88,0.08)';
+                    roughCtx.lineWidth = 0.9;
+                    roughCtx.beginPath();
+                    roughCtx.moveTo(i, 0);
+                    roughCtx.lineTo(i - width, height);
+                    roughCtx.stroke();
+                    roughCtx.beginPath();
+                    roughCtx.moveTo(i, 0);
+                    roughCtx.lineTo(i + width, height);
+                    roughCtx.stroke();
+                }
+                repeat = [2.4, 2.4];
+                bumpScale = 0.06;
+                roughnessBias = 0.035;
+            } else {
+                colorCtx.fillStyle = '#c1b6a6';
+                colorCtx.fillRect(0, 0, width, height);
+                bumpScale = 0.04;
+                roughnessBias = 0.16;
+            }
+
+            return {
+                map: this.canvasTexture(canvases.color, repeat[0], repeat[1]),
+                bumpMap: this.canvasTexture(canvases.bump, repeat[0], repeat[1]),
+                roughnessMap: this.canvasTexture(canvases.roughness, repeat[0], repeat[1]),
+                bumpScale,
+                roughnessBias,
+                metalnessBias
+            };
+        }
+
+        createMaterial() {
+            let color = this.baseColor;
+            let roughness = this.roughness;
+            let metalness = this.metalness;
+            let texturePack = null;
+
+            if (this.mode === 'white') {
+                color = 0xe4dfd7;
+                roughness = 0.62;
+                metalness = 0.05;
+            } else if (this.mode === 'real' && this.textureType !== 'none') {
+                texturePack = this.generateTexturePack(this.textureType);
+                if (texturePack) {
+                    roughness = this.roughness + texturePack.roughnessBias;
+                    metalness = this.metalness + texturePack.metalnessBias;
+                }
+            }
+            roughness = THREE.MathUtils.clamp(roughness, 0.03, 1);
+            metalness = THREE.MathUtils.clamp(metalness, 0, 1);
+            const brushedLike = ['brushed', 'florentine'].includes(this.textureType);
+            const diffuseLike = ['matte', 'sandblasted'].includes(this.textureType);
+
+            const material = new THREE.MeshPhysicalMaterial({
+                color,
+                roughness,
+                metalness,
+                map: texturePack?.map || null,
+                bumpMap: texturePack?.bumpMap || null,
+                bumpScale: texturePack?.bumpScale || 0,
+                roughnessMap: texturePack?.roughnessMap || null,
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                flatShading: this.mode !== 'real',
+                clearcoat: this.mode === 'real' ? (diffuseLike ? 0.16 : brushedLike ? 0.34 : 0.28) : 0.05,
+                clearcoatRoughness: diffuseLike ? 0.34 : brushedLike ? 0.18 : 0.24
+            });
+
+            material.wireframe = this.mode === 'wireframe';
+            return material;
+        }
+
+        updateParams(params) {
+            if (params.color !== undefined) this.baseColor = params.color;
+            if (params.roughness !== undefined) this.roughness = params.roughness;
+            if (params.metalness !== undefined) this.metalness = params.metalness;
+            if (params.textureType !== undefined) this.textureType = params.textureType;
+            return this.createMaterial();
+        }
+
+        setMode(mode) {
+            this.mode = mode;
+            return this.createMaterial();
+        }
+    }
+
+    class UIController {
+        constructor(sceneManager, materialCtrl) {
+            this.scene = sceneManager;
+            this.materialCtrl = materialCtrl;
+            this.currentMesh = null;
+            this.geometryParams = {
+                sides: 5,
+                fatness: 5,
+                internalVariation1: 5,
+                internalVariation2: 5,
+                branchValue: 4,
+                frameThickness: 3,
+                cornerRoundness: 4,
+                offsetDistance: 0.24,
+                ribWidth: 0.08,
+                plateRadiusMm: 210
+            };
+            this.quoteState = { current: 0, target: 0, raf: null };
+            this.initEventListeners();
+            this.generateAndUpdateModel();
+        }
+
+        calculateQuote() {
+            const p = this.geometryParams;
+            const materialType = this.materialCtrl.textureType || 'matte';
+            const finishFactorMap = {
+                matte: 1.0,
+                sandblasted: 1.12,
+                brushed: 1.18,
+                florentine: 1.32,
+                none: 0.92
+            };
+            const finishFactor = finishFactorMap[materialType] ?? 1;
+
+            const sidesFactor = 1 + (p.sides - 3) * 0.055;
+            const slotComplexity = 1 + (p.internalVariation1 + p.internalVariation2) * 0.045 + p.branchValue * 0.07;
+            const edgeComplexity = 1 + p.cornerRoundness * 0.022 + p.frameThickness * 0.032;
+            const volumeFactor = 1 + p.fatness * 0.028 + p.frameThickness * 0.055;
+            const prototypeBase = 680;
+            const materialCost = 260 * volumeFactor * sidesFactor;
+            const machiningCost = 420 * slotComplexity * edgeComplexity;
+            const finishingCost = 180 * finishFactor;
+            const inspectionMargin = 160;
+            const quote = (prototypeBase + materialCost + machiningCost + finishingCost + inspectionMargin) * finishFactor;
+            return Math.round(quote / 10) * 10;
+        }
+
+        animateQuoteTo(target) {
+            const quoteEl = document.getElementById('quote-value');
+            if (!quoteEl) return;
+            this.quoteState.target = target;
+            if (!this.quoteState.current) this.quoteState.current = target;
+            cancelAnimationFrame(this.quoteState.raf);
+            const start = this.quoteState.current;
+            const delta = target - start;
+            const startTime = performance.now();
+            const duration = 520;
+            const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+            const tick = (now) => {
+                const t = Math.min(1, (now - startTime) / duration);
+                const value = Math.round((start + delta * easeOutCubic(t)) / 10) * 10;
+                quoteEl.innerText = `¥${value.toLocaleString('zh-CN')}`;
+                this.quoteState.current = value;
+                if (t < 1) this.quoteState.raf = requestAnimationFrame(tick);
+            };
+            this.quoteState.raf = requestAnimationFrame(tick);
+        }
+
+        updateQuote() {
+            this.animateQuoteTo(this.calculateQuote());
+        }
+
+        generateAndUpdateModel() {
+            const geometry = GeometryGenerator.generatePlateGeometry(this.geometryParams);
+            const material = this.materialCtrl.createMaterial();
+            const mesh = new THREE.Mesh(geometry, material);
+            this.scene.updateModel(mesh);
+            this.currentMesh = mesh;
+            this.updateQuote();
+        }
+
+        regenerateGeometry() {
+            const geometry = GeometryGenerator.generatePlateGeometry(this.geometryParams);
+            if (!this.currentMesh) {
+                this.generateAndUpdateModel();
+                return;
+            }
+            this.currentMesh.geometry.dispose();
+            this.currentMesh.geometry = geometry;
+            this.updateQuote();
+        }
+
+        updateMaterialOnly() {
+            if (this.currentMesh) {
+                this.currentMesh.material.dispose?.();
+                this.currentMesh.material = this.materialCtrl.createMaterial();
+                this.updateQuote();
+            }
+        }
+
+        bindSlider(id, key, parser = parseFloat) {
+            const input = document.getElementById(id);
+            const value = document.getElementById(`${id.replace('-slider', '')}-value`);
+            input.addEventListener('input', (event) => {
+                const parsed = parser(event.target.value);
+                this.geometryParams[key] = parsed;
+                value.innerText = typeof parsed === 'number' && !Number.isInteger(parsed) ? parsed.toFixed(2).replace(/\.00$/, '') : parsed;
+                this.regenerateGeometry();
+            });
+        }
+
+        initEventListeners() {
+            this.bindSlider('sides-slider', 'sides', (v) => parseInt(v, 10));
+            this.bindSlider('fatness-slider', 'fatness', (v) => parseInt(v, 10));
+            this.bindSlider('internal-variation-1-slider', 'internalVariation1', (v) => parseInt(v, 10));
+            this.bindSlider('internal-variation-2-slider', 'internalVariation2', (v) => parseInt(v, 10));
+            this.bindSlider('branch-value-slider', 'branchValue', (v) => parseInt(v, 10));
+            this.bindSlider('frame-thickness-slider', 'frameThickness', (v) => parseInt(v, 10));
+            this.bindSlider('corner-roundness-slider', 'cornerRoundness', (v) => parseInt(v, 10));
+
+            const tabChat = document.getElementById('tab-chat');
+            const tabParams = document.getElementById('tab-params');
+            const chatView = document.getElementById('chat-view');
+            const paramsView = document.getElementById('params-view');
+            const switchDockView = (view) => {
+                const showChat = view === 'chat';
+                tabChat.classList.toggle('active', showChat);
+                tabParams.classList.toggle('active', !showChat);
+                chatView.classList.toggle('active', showChat);
+                paramsView.classList.toggle('active', !showChat);
+            };
+            tabChat.addEventListener('click', () => switchDockView('chat'));
+            tabParams.addEventListener('click', () => switchDockView('params'));
+
+            const colorPicker = document.getElementById('color-picker');
+            const roughnessSlider = document.getElementById('roughness-slider');
+            const metalnessSlider = document.getElementById('metalness-slider');
+            const textureSelect = document.getElementById('texture-type');
+            const craftButtons = Array.from(document.querySelectorAll('.craft-btn'));
+            const roughnessVal = document.getElementById('roughness-value');
+            const metalnessVal = document.getElementById('metalness-value');
+
+            const setCraftActive = (value) => {
+                craftButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.texture === value));
+            };
+
+            const updateMaterialFromUI = () => {
+                this.materialCtrl.updateParams({
+                    color: colorPicker.value,
+                    roughness: parseFloat(roughnessSlider.value),
+                    metalness: parseFloat(metalnessSlider.value),
+                    textureType: textureSelect.value
+                });
+                roughnessVal.innerText = parseFloat(roughnessSlider.value).toFixed(2);
+                metalnessVal.innerText = parseFloat(metalnessSlider.value).toFixed(2);
+                setCraftActive(textureSelect.value);
+                this.updateMaterialOnly();
+            };
+
+            colorPicker.addEventListener('input', updateMaterialFromUI);
+            roughnessSlider.addEventListener('input', updateMaterialFromUI);
+            metalnessSlider.addEventListener('input', updateMaterialFromUI);
+            textureSelect.addEventListener('change', updateMaterialFromUI);
+            craftButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    textureSelect.value = btn.dataset.texture;
+                    textureSelect.dispatchEvent(new Event('change'));
+                });
+            });
+
+            const modeReal = document.getElementById('mode-real');
+            const modeWhite = document.getElementById('mode-white');
+            const modeWire = document.getElementById('mode-wireframe');
+
+            const setMode = (mode) => {
+                document.querySelectorAll('.mode-btn').forEach((btn) => btn.classList.remove('active'));
+                if (mode === 'real') modeReal.classList.add('active');
+                if (mode === 'white') modeWhite.classList.add('active');
+                if (mode === 'wireframe') modeWire.classList.add('active');
+                this.materialCtrl.setMode(mode);
+                this.updateMaterialOnly();
+            };
+
+            modeReal.onclick = () => setMode('real');
+            modeWhite.onclick = () => setMode('white');
+            modeWire.onclick = () => setMode('wireframe');
+
+            const lightIntensity = document.getElementById('light-intensity');
+            const lightIntensityVal = document.getElementById('light-intensity-value');
+            lightIntensity.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                lightIntensityVal.innerText = value.toFixed(2);
+                this.scene.setLightIntensity(value);
+            });
+
+            const lightMotionSpeed = document.getElementById('light-motion-speed');
+            const lightMotionSpeedVal = document.getElementById('light-motion-speed-value');
+            lightMotionSpeed.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                lightMotionSpeedVal.innerText = value.toFixed(2);
+                this.scene.setLightMotionSpeed(value);
+            });
+
+            document.getElementById('shadow-toggle').addEventListener('change', (e) => {
+                this.scene.setShadowEnabled(e.target.checked);
+            });
+
+            const sendBtn = document.getElementById('send-btn');
+            const chatInput = document.getElementById('chat-input');
+            const messagesDiv = document.getElementById('chat-messages');
+
+            const addMessage = (text, isUser) => {
+                const div = document.createElement('div');
+                div.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+                div.innerText = text;
+                messagesDiv.appendChild(div);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            };
+
+            const syncSlider = (id, value) => {
+                const el = document.getElementById(id);
+                el.value = value;
+                el.dispatchEvent(new Event('input'));
+            };
+
+            const parseCommand = (inputText) => {
+                const lower = inputText.toLowerCase();
+                const feedback = [];
+                const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+                const setColor = (hex, label) => {
+                    colorPicker.value = hex;
+                    colorPicker.dispatchEvent(new Event('input'));
+                    feedback.push(`颜色已切到${label}。`);
+                };
+
+                const sidesMatch = lower.match(/(?:边数(?:改成|设为|到)?|做成|改成|改为)\s*(\d+)/) || lower.match(/(\d+)\s*边/);
+                if (sidesMatch) {
+                    const value = clamp(parseInt(sidesMatch[1], 10), 3, 9);
+                    syncSlider('sides-slider', value);
+                    feedback.push(`边数已改为 ${value}。`);
+                }
+
+                const fatnessMatch = lower.match(/(?:胖瘦|胖度|瘦度)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (fatnessMatch) {
+                    const value = clamp(parseInt(fatnessMatch[1], 10), 0, 9);
+                    syncSlider('fatness-slider', value);
+                    feedback.push(`胖瘦已调整到 ${value}。`);
+                } else if (lower.includes('胖一点') || lower.includes('更胖') || lower.includes('更饱满')) {
+                    syncSlider('fatness-slider', clamp(this.geometryParams.fatness + 1, 0, 9));
+                    feedback.push('形态已经更胖更饱满。');
+                } else if (lower.includes('瘦一点') || lower.includes('更瘦') || lower.includes('更收')) {
+                    syncSlider('fatness-slider', clamp(this.geometryParams.fatness - 1, 0, 9));
+                    feedback.push('形态已经更瘦更收。');
+                }
+
+                const var1Match = lower.match(/(?:内部变化1|变化1|变化一|内圈中点调整|中点调整)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (var1Match) {
+                    const value = clamp(parseInt(var1Match[1], 10), 0, 9);
+                    syncSlider('internal-variation-1-slider', value);
+                    feedback.push(`内部变化1已设置到 ${value}。`);
+                } else if (lower.includes('变化1大一点') || lower.includes('变化一大一点') || lower.includes('内部变化1增强')) {
+                    syncSlider('internal-variation-1-slider', clamp(this.geometryParams.internalVariation1 + 1, 0, 9));
+                    feedback.push('内部变化1已经增强。');
+                } else if (lower.includes('变化1小一点') || lower.includes('变化一小一点') || lower.includes('内部变化1减弱')) {
+                    syncSlider('internal-variation-1-slider', clamp(this.geometryParams.internalVariation1 - 1, 0, 9));
+                    feedback.push('内部变化1已经减弱。');
+                }
+
+                const var2Match = lower.match(/(?:内部变化2|变化2|变化二|内圈顶点调整|顶点调整)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (var2Match) {
+                    const value = clamp(parseInt(var2Match[1], 10), 0, 9);
+                    syncSlider('internal-variation-2-slider', value);
+                    feedback.push(`内部变化2已设置到 ${value}。`);
+                } else if (lower.includes('变化2大一点') || lower.includes('变化二大一点') || lower.includes('内部变化2增强')) {
+                    syncSlider('internal-variation-2-slider', clamp(this.geometryParams.internalVariation2 + 1, 0, 9));
+                    feedback.push('内部变化2已经增强。');
+                } else if (lower.includes('变化2小一点') || lower.includes('变化二小一点') || lower.includes('内部变化2减弱')) {
+                    syncSlider('internal-variation-2-slider', clamp(this.geometryParams.internalVariation2 - 1, 0, 9));
+                    feedback.push('内部变化2已经减弱。');
+                }
+
+                const branchMatch = lower.match(/(?:分叉|分叉值)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (branchMatch) {
+                    const value = clamp(parseInt(branchMatch[1], 10), 0, 9);
+                    syncSlider('branch-value-slider', value);
+                    feedback.push(`分叉已调整到 ${value}。`);
+                } else if (lower.includes('分叉大一点') || lower.includes('分叉增加') || lower.includes('分叉更明显')) {
+                    syncSlider('branch-value-slider', clamp(this.geometryParams.branchValue + 1, 0, 9));
+                    feedback.push('分叉已经增强。');
+                } else if (lower.includes('分叉减少') || lower.includes('分叉小一点') || lower.includes('分叉弱一点')) {
+                    syncSlider('branch-value-slider', clamp(this.geometryParams.branchValue - 1, 0, 9));
+                    feedback.push('分叉已经减弱。');
+                }
+
+                const frameMatch = lower.match(/(?:框粗度|框粗|框宽)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (frameMatch) {
+                    const value = clamp(parseInt(frameMatch[1], 10), 0, 9);
+                    syncSlider('frame-thickness-slider', value);
+                    feedback.push(`框粗度已调整到 ${value}。`);
+                } else if (lower.includes('框粗一点') || lower.includes('框厚一点')) {
+                    syncSlider('frame-thickness-slider', clamp(this.geometryParams.frameThickness + 1, 0, 9));
+                    feedback.push('框粗度已经加大。');
+                } else if (lower.includes('框细一点') || lower.includes('框薄一点')) {
+                    syncSlider('frame-thickness-slider', clamp(this.geometryParams.frameThickness - 1, 0, 9));
+                    feedback.push('框粗度已经减小。');
+                }
+
+                const roundMatch = lower.match(/(?:圆角|框圆角)\s*(?:改成|设为|到)?\s*(\d+)/);
+                if (roundMatch) {
+                    const value = clamp(parseInt(roundMatch[1], 10), 0, 9);
+                    syncSlider('corner-roundness-slider', value);
+                    feedback.push(`圆角已调整到 ${value}。`);
+                } else if (lower.includes('圆角大一点') || lower.includes('更圆润')) {
+                    syncSlider('corner-roundness-slider', clamp(this.geometryParams.cornerRoundness + 1, 0, 9));
+                    feedback.push('圆角已经增大。');
+                } else if (lower.includes('更锐利一点') || lower.includes('更锐利') || lower.includes('圆角小一点')) {
+                    syncSlider('corner-roundness-slider', clamp(this.geometryParams.cornerRoundness - 1, 0, 9));
+                    feedback.push('圆角已经减小，边缘更锐利。');
+                }
+
+                const roughnessMatch = lower.match(/(?:粗糙度|roughness)\s*([\d.]+)/);
+                if (roughnessMatch) {
+                    const value = clamp(parseFloat(roughnessMatch[1]), 0.03, 0.75);
+                    roughnessSlider.value = value;
+                    roughnessSlider.dispatchEvent(new Event('input'));
+                    feedback.push(`粗糙度已调整到 ${value.toFixed(2)}。`);
+                } else if (lower.includes('更粗糙')) {
+                    const value = clamp(parseFloat(roughnessSlider.value) + 0.08, 0.03, 0.75);
+                    roughnessSlider.value = value;
+                    roughnessSlider.dispatchEvent(new Event('input'));
+                    feedback.push('粗糙度已经提高。');
+                } else if (lower.includes('更光滑') || lower.includes('更亮面')) {
+                    const value = clamp(parseFloat(roughnessSlider.value) - 0.08, 0.03, 0.75);
+                    roughnessSlider.value = value;
+                    roughnessSlider.dispatchEvent(new Event('input'));
+                    feedback.push('粗糙度已经降低。');
+                }
+
+                const metalnessMatch = lower.match(/(?:金属度|metalness)\s*([\d.]+)/);
+                if (metalnessMatch) {
+                    const value = clamp(parseFloat(metalnessMatch[1]), 0.6, 1);
+                    metalnessSlider.value = value;
+                    metalnessSlider.dispatchEvent(new Event('input'));
+                    feedback.push(`金属度已调整到 ${value.toFixed(2)}。`);
+                }
+
+                const colorMap = [
+                    ['粉色', '#f3b6cf'],
+                    ['粉', '#f3b6cf'],
+                    ['红色', '#d96a6a'],
+                    ['红', '#d96a6a'],
+                    ['蓝色', '#8ba8d8'],
+                    ['蓝', '#8ba8d8'],
+                    ['绿色', '#8fbf9f'],
+                    ['绿', '#8fbf9f'],
+                    ['黑色', '#4c4f57'],
+                    ['黑', '#4c4f57'],
+                    ['白色', '#f2f2f0'],
+                    ['白', '#f2f2f0'],
+                    ['金色', '#d6b25e'],
+                    ['金', '#d6b25e'],
+                    ['银色', '#c7ccd4'],
+                    ['银', '#c7ccd4'],
+                    ['铜色', '#b77a61'],
+                    ['铜', '#b77a61'],
+                    ['香槟色', '#d7c3a0']
+                ];
+                const matchedColor = colorMap.find(([name]) => lower.includes(name));
+                if (matchedColor) {
+                    setColor(matchedColor[1], matchedColor[0]);
+                }
+
+                if (lower.includes('拉丝')) {
+                    textureSelect.value = 'brushed';
+                    textureSelect.dispatchEvent(new Event('change'));
+                    feedback.push('工艺已切到拉丝。');
+                } else if (lower.includes('哑光')) {
+                    textureSelect.value = 'matte';
+                    textureSelect.dispatchEvent(new Event('change'));
+                    feedback.push('工艺已切到哑光。');
+                } else if (lower.includes('喷砂')) {
+                    textureSelect.value = 'sandblasted';
+                    textureSelect.dispatchEvent(new Event('change'));
+                    feedback.push('工艺已切到喷砂。');
+                } else if (lower.includes('佛罗伦萨') || lower.includes('交叉刻纹')) {
+                    textureSelect.value = 'florentine';
+                    textureSelect.dispatchEvent(new Event('change'));
+                    feedback.push('工艺已切到佛罗伦萨。');
+                }
+
+                if (lower.includes('白模')) {
+                    modeWhite.click();
+                    feedback.push('已切到白模模式。');
+                } else if (lower.includes('线框')) {
+                    modeWire.click();
+                    feedback.push('已切到线框模式。');
+                } else if (lower.includes('实体') || lower.includes('金属材质') || lower.includes('真实材质')) {
+                    modeReal.click();
+                    feedback.push('已恢复实体材质模式。');
+                }
+
+                if (feedback.length === 0) {
+                    return '现在可识别边数(3-9)、胖瘦、内部变化1、内部变化2、分叉、框粗度、圆角，以及粗糙度、金属度和工艺模式。';
+                }
+                return feedback.join(' ');
+            };
+
+            sendBtn.addEventListener('click', () => {
+                const text = chatInput.value.trim();
+                if (!text) return;
+                addMessage(text, true);
+                addMessage(parseCommand(text), false);
+                chatInput.value = '';
+            });
+
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendBtn.click();
+            });
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const crossesHost = document.getElementById('bg-crosses');
+        const rows = 7;
+        const cols = 13;
+        const xPad = 8;
+        const yPad = 10;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cross = document.createElement('span');
+                cross.className = 'bg-cross';
+                const x = (c / (cols - 1)) * (100 - xPad * 2) + xPad;
+                const y = (r / (rows - 1)) * (100 - yPad * 2) + yPad;
+                cross.style.left = `${x}%`;
+                cross.style.top = `${y}%`;
+                crossesHost.appendChild(cross);
+            }
+        }
+
+        const sceneMgr = new SceneManager('canvas-container');
+        const materialCtrl = new MaterialController({
+            color: '#c7ccd4',
+            roughness: 0.18,
+            metalness: 0.96,
+            textureType: 'matte'
+        });
+        new UIController(sceneMgr, materialCtrl);
+        window.addEventListener('resize', () => sceneMgr.onResize());
+    });
+</script>
+</body>
+</html>
