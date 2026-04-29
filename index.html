@@ -21,13 +21,6 @@
             font-display: swap;
         }
 
-        @font-face {
-            font-family: "Old Standard TT Local";
-            src: url("./Old_Standard_TT/OldStandardTT-Italic.ttf") format("truetype");
-            font-weight: 400;
-            font-style: italic;
-            font-display: swap;
-        }
         :root {
             --ink: #2f3338;
             --ink-soft: #6f757e;
@@ -37,7 +30,7 @@
             --glow: 0 4px 14px rgba(60, 64, 70, 0.12);
             --btn: #e6e7e9;
             --btn-ink: #2a2e34;
-        }
+        }以下是我的新一轮修改意见，给我新的prompt我发给codex
 
         * {
             box-sizing: border-box;
@@ -51,9 +44,10 @@
 
         body {
             overflow: hidden;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", "Old Standard TT Local", "Times New Roman", serif;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
             color: var(--ink);
             background: linear-gradient(225deg, #f6f6f4 0%, #eeeeec 52%, #d8d8d6 100%);
+            letter-spacing: -0.01em;
         }
 
         body::before {
@@ -73,11 +67,29 @@
 
         .bg-cross {
             position: absolute;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: rgba(20, 24, 30, 0.58);
-            opacity: 0.68;
+            width: 6px;
+            height: 6px;
+            opacity: 0.86;
+        }
+
+        .bg-cross::before,
+        .bg-cross::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            background: rgba(55, 60, 68, 0.68);
+            transform: translate(-50%, -50%);
+        }
+
+        .bg-cross::before {
+            width: 6px;
+            height: 1px;
+        }
+
+        .bg-cross::after {
+            width: 1px;
+            height: 6px;
         }
 
         #canvas-container {
@@ -85,6 +97,7 @@
             inset: 0;
             z-index: 5;
         }
+
 
         .top-nav {
             position: fixed;
@@ -127,8 +140,10 @@
 
         .title-cluster {
             position: fixed;
-            left: 42px;
-            top: 56px;
+            left: 40px;
+            right: 40px;
+            width: auto;
+            top: 42px;
             z-index: 3;
             pointer-events: none;
         }
@@ -157,9 +172,9 @@
         .title-en {
             margin: 0;
             font-family: "Old Standard TT Local", "Times New Roman", serif;
-            font-size: clamp(62px, 7.4vw, 120px);
+            font-size: clamp(92px, 10.8vw, 196px);
             line-height: 0.88;
-            letter-spacing: -0.075em;
+            letter-spacing: -0.09em;
             color: rgba(52, 56, 63, 0.9);
             filter: none;
             transform: translateX(-2px);
@@ -169,15 +184,16 @@
         }
 
         .title-desc {
-            margin: 12px 0 0 8px;
-            width: auto;
-            max-width: none;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
-            font-size: 11px;
-            line-height: 1.75;
+            margin: 6px 0 0 8px;
+            width: 390px;
+            max-width: 390px;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
+            font-size: 13px;
+            line-height: 1.35;
             color: #676d76;
-            letter-spacing: 0.01em;
-            white-space: nowrap;
+            letter-spacing: -0.01em;
+            white-space: normal;
+            text-align: left;
         }
 
         .control-dock {
@@ -195,9 +211,10 @@
             box-shadow: none;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 86%, rgba(0,0,0,0) 100%);
-            mask-image: linear-gradient(to bottom, #000 0%, #000 86%, rgba(0,0,0,0) 100%);
+            overflow: visible;
+            overflow-x: hidden;
+            -webkit-mask-image: none;
+            mask-image: none;
         }
 
         .dock-switch {
@@ -205,7 +222,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             padding: 0 0 18px;
-            border-bottom: 1px solid rgba(72, 78, 88, 0.32);
         }
 
         .dock-tab {
@@ -213,11 +229,11 @@
             border: 0;
             background: none;
             color: #545a63;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-family: "Old Standard TT Local", "Times New Roman", serif;
             font-size: 10px;
             padding: 9px 10px 6px;
             cursor: pointer;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.02em;
         }
 
         .dock-tab.active {
@@ -245,10 +261,7 @@
             min-height: 0;
         }
 
-        .panel-header {
-            padding: 18px 0 18px;
-            border-bottom: 1px solid rgba(72, 78, 88, 0.32);
-        }
+        .panel-header { display: none; }
 
         .eyebrow {
             margin: 0;
@@ -264,7 +277,7 @@
             font-size: 16px;
             font-weight: 500;
             color: #3d434b;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-family: "Old Standard TT Local", "Songti SC", "STSong", "Noto Serif SC", serif;
         }
 
         .panel-subtitle {
@@ -272,15 +285,16 @@
             color: #727983;
             font-size: 11px;
             line-height: 1.4;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-family: "Old Standard TT Local", "Songti SC", "STSong", "Noto Serif SC", serif;
         }
 
         .chat-messages,
         .params-scroll {
             overflow-y: auto;
+            overflow-x: hidden;
             min-height: 0;
-            padding: 0 0 90px;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            padding: 6px 0 20px;
+            font-family: "Old Standard TT Local", "Songti SC", "STSong", "Noto Serif SC", serif;
             scrollbar-width: none;
         }
 
@@ -307,53 +321,78 @@
 
         .bot-message {
             color: #525962;
-            border: 1px solid rgba(112, 120, 131, 0.28);
-            background: transparent;
+            border: 0;
+            background: none;
+            border-radius: 0;
+            padding: 0;
+            max-width: 100%;
         }
 
         .user-message {
             align-self: flex-end;
             color: #2b3037;
-            border: 1px solid rgba(95, 103, 114, 0.34);
-            background: transparent;
+            border: 0;
+            background: none;
+            border-radius: 0;
+            max-width: 100%;
+            text-align: right;
+            padding: 8px 0 0;
+            position: relative;
+        }
+
+        .user-message::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 44px;
+            height: 1px;
+            background: rgba(36, 42, 50, 0.82);
         }
 
         .chat-input-area {
             display: flex;
             gap: 8px;
-            padding: 10px 12px 12px;
-            border-top: 1px solid rgba(198, 182, 161, 0.13);
+            padding: 8px 0 0;
+            border-top: 0;
+            margin-top: 8px;
         }
 
         #chat-input,
         select,
         input[type="number"] {
             width: 100%;
-            border: 1px solid rgba(104, 112, 123, 0.3);
+            border: 0;
+            border-top: 1px solid rgba(104, 112, 123, 0.3);
             background: transparent;
             color: #3a3f46;
-            border-radius: 4px;
-            padding: 9px 10px;
+            border-radius: 0;
+            padding: 9px 2px 7px;
             outline: none;
             font-size: 11px;
+            letter-spacing: -0.01em;
         }
 
         #chat-input:focus,
         select:focus,
         input[type="number"]:focus {
-            border-color: rgba(72, 79, 89, 0.5);
+            border-top-color: rgba(72, 79, 89, 0.5);
             box-shadow: none;
         }
 
         #send-btn {
-            border: 1px solid rgba(86, 94, 105, 0.42);
-            border-radius: 4px;
+            border: 0;
+            border-top: 1px solid rgba(86, 94, 105, 0.42);
+            border-radius: 0;
             background: transparent;
             color: #2c3138;
-            padding: 0 15px;
+            padding: 9px 10px 7px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 400;
             cursor: pointer;
+            white-space: nowrap;
+            writing-mode: horizontal-tb;
+            letter-spacing: -0.01em;
         }
 
         .param-group {
@@ -369,7 +408,7 @@
             margin: 0 0 8px;
             font-size: 11px;
             color: #4c525b;
-            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-family: "Old Standard TT Local", "Songti SC", "STSong", "Noto Serif SC", serif;
         }
 
         .slider-container {
@@ -386,14 +425,18 @@
             margin-bottom: 4px;
             color: #666d76;
             font-size: 10px;
+            letter-spacing: -0.01em;
         }
 
         input[type="range"] {
-            width: 100%;
-            height: 20px;
+            width: calc(100% - 16px);
+            margin: 0 8px;
+            height: 24px;
             appearance: none;
             -webkit-appearance: none;
             background: transparent;
+            overflow: visible;
+            padding: 4px 0;
         }
 
         input[type="range"]::-webkit-slider-runnable-track {
@@ -414,7 +457,7 @@
             background: #e0e2e3;
             box-shadow: none;
             transform: rotate(45deg);
-            margin-top: -7px;
+            margin-top: -6px;
             border-radius: 1px;
         }
 
@@ -492,21 +535,6 @@
             color: #6d7680;
             font-size: 9px;
             line-height: 1.4;
-        }
-
-        .pill-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .pill {
-            padding: 4px 8px;
-            border-radius: 999px;
-            font-size: 9px;
-            color: #6d7782;
-            border: 1px solid rgba(160, 172, 188, 0.18);
-            background: rgba(232, 234, 237, 0.88);
         }
 
         #texture-type {
@@ -589,6 +617,7 @@
 
             .title-cluster {
                 left: 16px;
+                right: 16px;
                 top: 52px;
             }
 
@@ -597,7 +626,8 @@
             }
 
             .title-desc {
-                width: calc(100vw - 32px);
+                width: min(390px, calc(100vw - 32px));
+                max-width: min(390px, calc(100vw - 32px));
                 margin-left: 0;
             }
 
@@ -613,21 +643,23 @@
 
         .quote-display {
             position: fixed;
-            right: 42px;
-            bottom: 34px;
-            z-index: 19;
-            pointer-events: none;
+            right: 34px;
+            bottom: 66px;
+            z-index: 12;
+            pointer-events: auto;
+            mix-blend-mode: normal;
             text-align: right;
-            color: rgba(48, 53, 61, 0.86);
+            color: rgba(52, 56, 63, 0.9);
+            width: clamp(360px, 42vw, 660px);
         }
 
         .quote-label {
-            margin: 0 0 4px;
+            margin: 8px 0 0;
             font-family: "Old Standard TT Local", "Times New Roman", serif;
             font-size: 10px;
-            letter-spacing: 0.26em;
-            text-transform: uppercase;
-            color: rgba(82, 89, 99, 0.72);
+            letter-spacing: 0.04em;
+            text-transform: lowercase;
+            color: rgba(52, 56, 63, 0.9);
         }
 
         .quote-value {
@@ -637,16 +669,151 @@
             line-height: 0.9;
             letter-spacing: -0.055em;
             font-variant-numeric: tabular-nums lining-nums;
+            color: rgba(52, 56, 63, 0.9);
+            cursor: pointer;
+            pointer-events: auto;
+            display: inline-block;
         }
 
-        .quote-note {
-            margin: 7px 0 0;
+        .quote-logic {
+            display: none;
+            margin: 0 0 14px auto;
+            width: min(100%, 620px);
+            padding-top: 14px;
+            border-top: 0;
+            font-size: 10px;
+            line-height: 1.25;
+            font-weight: 400;
+            letter-spacing: 0;
+            color: inherit;
+            text-align: right;
+            white-space: normal;
+            max-height: none;
+            overflow: visible;
+        }
+
+        .quote-logic::before {
+            content: none;
+        }
+        .quote-display.expanded {
+            top: auto;
+            bottom: 66px;
+            display: block;
+        }
+        .quote-display.expanded .quote-logic { display: block; }
+
+        .quote-section {
+            margin: 0 0 8px;
+        }
+
+        .quote-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .quote-heading {
+            margin: 0 0 2px;
+            font-size: 10px;
+            font-weight: 400;
+            line-height: 1.25;
+            text-align: right;
+            font-style: normal;
+            color: inherit;
+        }
+
+        .quote-desc {
+            margin: 0 0 1px;
+            font-size: 10px;
+            text-align: right;
+            font-weight: 400;
+            font-style: normal;
+            line-height: 1.25;
+            color: inherit;
+        }
+
+        .quote-cost {
+            margin: 0;
+            margin-top: 0;
+            text-align: right;
+            font-weight: 400;
+            font-size: 10px;
+            line-height: 1.25;
+            color: inherit;
+            font-style: normal;
+        }
+
+        /* Global monochrome text + line tuning */
+        body,
+        .brand,
+        .nav-links,
+        .nav-cta,
+        .title-en,
+        .title-desc,
+        .dock-tab,
+        .dock-tab.active,
+        .eyebrow,
+        .panel-title,
+        .panel-subtitle,
+        .message,
+        .bot-message,
+        .user-message,
+        #chat-input,
+        #send-btn,
+        .param-group h4,
+        .slider-container label,
+        .control-label,
+        .mode-btn,
+        .mode-btn.active,
+        .color-preview,
+        .checkbox-label,
+        .mini-note,
+        .craft-btn,
+        .craft-btn.active,
+        .quote-display,
+        .quote-value,
+        .quote-label,
+        .quote-logic,
+        .quote-heading,
+        .quote-desc,
+        .quote-cost {
+            color: #9d9d9b !important;
+        }
+
+        .bg-cross::before,
+        .bg-cross::after,
+        .dock-tab.active::before,
+        .user-message::before,
+        input[type="range"]::-webkit-slider-runnable-track,
+        input[type="range"]::-moz-range-track {
+            border-color: rgba(187, 187, 187, 0.5) !important;
+            background-color: rgba(187, 187, 187, 0.5);
+        }
+
+        .quote-logic {
+            border-top: 0 !important;
+            background-color: transparent;
+        }
+
+        .price-toggle {
+            display: inline-block;
+            margin-top: 28px;
+            padding-top: 0;
+            padding-left: 0;
+            border: 0;
+            background: transparent;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
             font-size: 10px;
             letter-spacing: 0.04em;
-            color: rgba(88, 96, 108, 0.68);
+            color: inherit;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            opacity: 0.72;
+            cursor: pointer;
+            align-self: flex-start;
         }
 
-        .quote-logic { display: none; }
+        .price-toggle.active {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -654,7 +821,7 @@
 <div id="canvas-container"></div>
 
 <header class="top-nav">
-    <div class="brand">BUQI OBJECT STUDY</div>
+    <div class="brand"></div>
     <div class="nav-links">
         <span></span>
         <span></span>
@@ -663,9 +830,8 @@
 </header>
 
 <section class="title-cluster">
-    <h1 class="title-cn">不器之器</h1>
     <p class="title-en">the unbounded vessel</p>
-    <p class="title-desc">安静、克制的东方器物语言。呈现参数雕塑与材质实验的当代品牌表达。</p>
+    <p class="title-desc">A quiet parametric vessel study, shaped through restrained geometry, material tension, and subtle industrial craft.</p>
 </section>
 
 <div class="control-dock">
@@ -676,9 +842,7 @@
 
     <div id="chat-view" class="dock-view active">
         <div class="panel-header">
-            <p class="eyebrow">Design Assistant</p>
             <h2 class="panel-title">语言驱动调形</h2>
-            <p class="panel-subtitle">现在可以直接对话调整边数、胖瘦、内部变化1/2、分叉、框粗度、圆角，以及材质与预览模式。</p>
         </div>
         <div class="chat-messages" id="chat-messages">
             <div class="message bot-message">可以直接说：
@@ -690,16 +854,14 @@
 “拉丝、粗糙度 0.3”</div>
         </div>
         <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="例如：边数改成6、胖一点、分叉减少、框粗一点">
+            <input type="text" id="chat-input" placeholder="输入指令：边数 6，框粗一点，切到拉丝">
             <button id="send-btn">发送</button>
         </div>
     </div>
 
     <div id="params-view" class="dock-view">
         <div class="panel-header">
-            <p class="eyebrow">Parametric Controls</p>
             <h2 class="panel-title">参数面板</h2>
-            <p class="panel-subtitle">形态参数按 GH 语义：多边骨架、内部变化1/2、分叉、框粗度与圆角，先二维结构后浅盘化。</p>
         </div>
         <div class="params-scroll">
             <div class="param-group">
@@ -737,7 +899,7 @@
             <div class="param-group">
                 <h4>2. 材质参数</h4>
                 <div class="color-preview">
-                    <input type="color" id="color-picker" value="#c7ccd4">
+                    <input type="color" id="color-picker" value="#f2f0ea">
                     <span>主体颜色</span>
                 </div>
                 <div class="slider-container">
@@ -763,6 +925,10 @@
                         <button type="button" class="craft-btn" data-texture="florentine"><span class="craft-dot florentine"></span>佛罗伦萨</button>
                     </div>
                 </div>
+                <div class="slider-container">
+                    <label>工艺强度 craft intensity: <span id="craft-intensity-value">0.55</span></label>
+                    <input type="range" id="craft-intensity-slider" min="0" max="1" step="0.01" value="0.55">
+                </div>
             </div>
 
             <div class="param-group">
@@ -777,40 +943,21 @@
 
             <div class="param-group">
                 <h4>4. 摄影棚灯光</h4>
-                <div class="slider-container">
-                    <label>主灯总强度: <span id="light-intensity-value">2.8</span></label>
-                    <input type="range" id="light-intensity" min="2.8" max="2.8" step="0.01" value="2.8">
-                </div>
-                <div class="slider-container">
-                    <label>光照绕转速度: <span id="light-motion-speed-value">0.4</span></label>
-                    <input type="range" id="light-motion-speed" min="0.4" max="0.4" step="0.01" value="0.4">
-                </div>
                 <label class="checkbox-label">
                     <input type="checkbox" id="shadow-toggle" checked>
                     开启柔和阴影
                 </label>
                 <div class="mini-note">已改为主柔光、对侧补光、顶灯、背轮廓光与环境穹顶色的组合，不再是单灯直打。</div>
             </div>
-
-            <div class="param-group">
-                <h4>5. 状态提示</h4>
-                <div class="pill-row">
-                    <span class="pill">多边骨架</span>
-                    <span class="pill">内部双变化</span>
-                    <span class="pill">结构分叉</span>
-                    <span class="pill">框粗可调</span>
-                    <span class="pill">棚拍布光</span>
-                    <span class="pill">黑棚质感</span>
-                </div>
-            </div>
         </div>
     </div>
+    <button type="button" class="price-toggle" id="price-toggle">显示价格</button>
 </div>
 
 <aside class="quote-display" aria-live="polite">
-    <p class="quote-label">Estimated Production Cost</p>
+    <div class="quote-logic" id="quote-logic"></div>
     <p class="quote-value" id="quote-value">¥0000</p>
-    <p class="quote-note" id="quote-note">small-batch prototype quotation</p>
+    <p class="quote-label">estimated production cost</p>
 </aside>
 
 <script type="importmap">
@@ -857,9 +1004,8 @@
             this.controls.minDistance = 3.6;
             this.controls.maxDistance = 10.2;
             this.lightMotionSpeed = 0.4;
-
             this.setupEnvironment();
-            this.currentModel = null;
+            this.currentModelGroup = null;
             this.startAnimation();
         }
 
@@ -936,6 +1082,7 @@
             this.overheadLight.position.set(2.2, 6.8, 2.0);
             this.scene.add(this.overheadLight);
 
+
             this.rimLight = new THREE.DirectionalLight(0xc0c9da, 0.56);
             this.rimLight.position.set(-4.1, 2.4, -5.8);
             this.scene.add(this.rimLight);
@@ -950,7 +1097,7 @@
 
             const shadowPlane = new THREE.Mesh(
                 new THREE.PlaneGeometry(18, 14),
-                new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.18, transparent: true })
+                new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.06, transparent: true })
             );
             shadowPlane.rotation.x = -Math.PI / 2;
             shadowPlane.position.y = -0.558;
@@ -962,7 +1109,7 @@
                 new THREE.MeshBasicMaterial({
                     map: this.createGroundShadowTexture(),
                     transparent: true,
-                    opacity: 0.42,
+                    opacity: 0.028,
                     depthWrite: false
                 })
             );
@@ -1010,17 +1157,19 @@
             this.renderer.shadowMap.enabled = enabled;
         }
 
-        updateModel(mesh) {
-            if (this.currentModel) {
-                this.scene.remove(this.currentModel);
-                this.currentModel.geometry.dispose();
-            }
-            this.currentModel = mesh;
-            mesh.castShadow = true;
-            mesh.receiveShadow = false;
-            mesh.position.set(3.88, -0.03, -0.28);
-            mesh.scale.set(0.8, 1.42, 0.8);
-            this.scene.add(mesh);
+        updateModelGroup(group) {
+            if (this.currentModelGroup) this.scene.remove(this.currentModelGroup);
+            this.currentModelGroup = group;
+            group.position.set(3.88, -0.03, -0.28);
+            group.scale.set(0.8, 1.42, 0.8);
+            group.traverse((obj) => {
+                if (obj.isMesh) {
+                    obj.castShadow = true;
+                    obj.receiveShadow = false;
+                }
+            });
+            this.scene.add(group);
+            this.renderer.shadowMap.needsUpdate = true;
         }
 
         createGroundShadowTexture() {
@@ -1526,6 +1675,7 @@
             this.roughness = baseParams.roughness;
             this.metalness = baseParams.metalness;
             this.textureType = baseParams.textureType;
+            this.craftIntensity = baseParams.craftIntensity ?? 0.55;
             this.mode = 'real';
         }
 
@@ -1608,8 +1758,9 @@
         }
 
         generateTexturePack(type) {
+            const craft = THREE.MathUtils.clamp(this.craftIntensity, 0, 1);
             const canvases = this.createTextureCanvases();
-            const ctxSet = this.fillBaseCanvases(canvases, '#d1d1d1');
+            const ctxSet = this.fillBaseCanvases(canvases, '#ece9e1');
             const { colorCtx, bumpCtx, roughCtx } = ctxSet;
             const width = canvases.color.width;
             const height = canvases.color.height;
@@ -1619,14 +1770,14 @@
             let metalnessBias = 0;
 
             if (type === 'brushed') {
-                this.drawBrushedPattern(ctxSet, 420, 0.62);
+                this.drawBrushedPattern(ctxSet, Math.floor(180 + 360 * craft), 0.2 + 0.62 * craft);
                 repeat = [2.6, 2.6];
-                bumpScale = 0.1;
-                roughnessBias = 0.05;
+                bumpScale = 0.025 + 0.08 * craft;
+                roughnessBias = 0.03 + 0.05 * craft;
             } else if (type === 'matte') {
-                colorCtx.fillStyle = '#b9b0a3';
+                colorCtx.fillStyle = '#eeebe4';
                 colorCtx.fillRect(0, 0, width, height);
-                for (let i = 0; i < 4200; i++) {
+                for (let i = 0; i < Math.floor(1400 + 3600 * craft); i++) {
                     const x = Math.random() * width;
                     const y = Math.random() * height;
                     const tone = 120 + Math.random() * 16;
@@ -1637,13 +1788,13 @@
                     roughCtx.fillRect(x, y, 1, 1);
                 }
                 repeat = [1.7, 1.7];
-                bumpScale = 0.06;
-                roughnessBias = 0.24;
-                metalnessBias = -0.12;
+                bumpScale = 0.01 + 0.06 * craft;
+                roughnessBias = 0.1 + 0.18 * craft;
+                metalnessBias = -0.07 - 0.07 * craft;
             } else if (type === 'sandblasted') {
-                colorCtx.fillStyle = '#c5bbad';
+                colorCtx.fillStyle = '#ece8de';
                 colorCtx.fillRect(0, 0, width, height);
-                for (let i = 0; i < 14000; i++) {
+                for (let i = 0; i < Math.floor(3800 + 10500 * craft); i++) {
                     const x = Math.random() * width;
                     const y = Math.random() * height;
                     const t = 100 + Math.random() * 70;
@@ -1654,13 +1805,13 @@
                     roughCtx.fillRect(x, y, 1.2, 1.2);
                 }
                 repeat = [2.8, 2.8];
-                bumpScale = 0.16;
-                roughnessBias = 0.22;
-                metalnessBias = -0.08;
+                bumpScale = 0.02 + 0.14 * craft;
+                roughnessBias = 0.1 + 0.16 * craft;
+                metalnessBias = -0.05 - 0.06 * craft;
             } else if (type === 'florentine') {
-                colorCtx.fillStyle = '#c7b9a6';
+                colorCtx.fillStyle = '#ede8de';
                 colorCtx.fillRect(0, 0, width, height);
-                const step = 26;
+                const step = Math.max(16, Math.floor(34 - 14 * craft));
                 for (let i = -width; i < width * 2; i += step) {
                     bumpCtx.strokeStyle = 'rgba(200,200,200,0.09)';
                     bumpCtx.lineWidth = 0.9;
@@ -1686,13 +1837,13 @@
                     roughCtx.stroke();
                 }
                 repeat = [2.4, 2.4];
-                bumpScale = 0.06;
-                roughnessBias = 0.035;
+                bumpScale = 0.01 + 0.08 * craft;
+                roughnessBias = 0.01 + 0.06 * craft;
             } else {
-                colorCtx.fillStyle = '#c1b6a6';
+                colorCtx.fillStyle = '#ece6dc';
                 colorCtx.fillRect(0, 0, width, height);
-                bumpScale = 0.04;
-                roughnessBias = 0.16;
+                bumpScale = 0.01 + 0.04 * craft;
+                roughnessBias = 0.08 + 0.1 * craft;
             }
 
             return {
@@ -1712,7 +1863,7 @@
             let texturePack = null;
 
             if (this.mode === 'white') {
-                color = 0xe4dfd7;
+                color = 0xf0ede6;
                 roughness = 0.62;
                 metalness = 0.05;
             } else if (this.mode === 'real' && this.textureType !== 'none') {
@@ -1738,8 +1889,8 @@
                 vertexColors: true,
                 side: THREE.DoubleSide,
                 flatShading: this.mode !== 'real',
-                clearcoat: this.mode === 'real' ? (diffuseLike ? 0.16 : brushedLike ? 0.34 : 0.28) : 0.05,
-                clearcoatRoughness: diffuseLike ? 0.34 : brushedLike ? 0.18 : 0.24
+                clearcoat: this.mode === 'real' ? (diffuseLike ? 0.1 : brushedLike ? 0.2 : 0.16) : 0.03,
+                clearcoatRoughness: diffuseLike ? 0.5 : brushedLike ? 0.34 : 0.4
             });
 
             material.wireframe = this.mode === 'wireframe';
@@ -1751,6 +1902,7 @@
             if (params.roughness !== undefined) this.roughness = params.roughness;
             if (params.metalness !== undefined) this.metalness = params.metalness;
             if (params.textureType !== undefined) this.textureType = params.textureType;
+            if (params.craftIntensity !== undefined) this.craftIntensity = params.craftIntensity;
             return this.createMaterial();
         }
 
@@ -1792,19 +1944,46 @@
                 florentine: 1.32,
                 none: 0.92
             };
+            const finishLabelMap = {
+                matte: '哑光',
+                sandblasted: '喷砂',
+                brushed: '拉丝',
+                florentine: '佛罗伦萨',
+                none: '基础'
+            };
             const finishFactor = finishFactorMap[materialType] ?? 1;
-
+            const craftIntensity = this.materialCtrl.craftIntensity ?? 0.55;
             const sidesFactor = 1 + (p.sides - 3) * 0.055;
-            const slotComplexity = 1 + (p.internalVariation1 + p.internalVariation2) * 0.045 + p.branchValue * 0.07;
-            const edgeComplexity = 1 + p.cornerRoundness * 0.022 + p.frameThickness * 0.032;
             const volumeFactor = 1 + p.fatness * 0.028 + p.frameThickness * 0.055;
-            const prototypeBase = 680;
-            const materialCost = 260 * volumeFactor * sidesFactor;
-            const machiningCost = 420 * slotComplexity * edgeComplexity;
-            const finishingCost = 180 * finishFactor;
+            const structureComplexity = 1 + (p.internalVariation1 + p.internalVariation2) * 0.04 + p.branchValue * 0.06 + p.cornerRoundness * 0.022;
+            const openAreaPercent = THREE.MathUtils.clamp(
+                14 + p.internalVariation1 * 3.4 + p.internalVariation2 * 3.1 + p.branchValue * 4.6,
+                10,
+                78
+            );
+
+            const baseMaterial = 340 * volumeFactor * sidesFactor;
+            const finishProcess = 190 * finishFactor * (0.78 + craftIntensity * 0.5);
+            const materialFinishCost = baseMaterial + finishProcess;
+
+            const structureCost = 360 * structureComplexity * (1 + (p.sides - 3) * 0.02);
+            const cutoutCost = 120 + openAreaPercent * 4.8 + p.branchValue * 46 + (p.internalVariation1 + p.internalVariation2) * 20;
+            const formingCost = 220 * volumeFactor * (1 + p.frameThickness * 0.065 + p.fatness * 0.035);
             const inspectionMargin = 160;
-            const quote = (prototypeBase + materialCost + machiningCost + finishingCost + inspectionMargin) * finishFactor;
-            return Math.round(quote / 10) * 10;
+            const rawTotal = (materialFinishCost + structureCost + cutoutCost + formingCost + inspectionMargin) * (0.9 + finishFactor * 0.1);
+
+            const to10 = (v) => Math.round(v / 10) * 10;
+            const detail = {
+                total: to10(rawTotal),
+                materialFinishCost: to10(materialFinishCost),
+                structureCost: to10(structureCost),
+                cutoutCost: to10(cutoutCost),
+                formingCost: to10(formingCost),
+                openAreaPercent: Math.round(openAreaPercent * 10) / 10,
+                volumeFactor: Math.round(volumeFactor * 100) / 100,
+                finishLabel: finishLabelMap[materialType] ?? '哑光'
+            };
+            return detail;
         }
 
         animateQuoteTo(target) {
@@ -1828,15 +2007,50 @@
             this.quoteState.raf = requestAnimationFrame(tick);
         }
 
+        renderQuoteBreakdown(detail) {
+            const quoteLogic = document.getElementById('quote-logic');
+            if (!quoteLogic) return;
+            quoteLogic.innerHTML = `<div class="quote-section">
+    <p class="quote-heading">material / finish</p>
+    <p class="quote-desc">当前材质工艺：${detail.finishLabel}</p>
+    <p class="quote-cost">base material + finish: ¥${detail.materialFinishCost.toLocaleString('zh-CN')}</p>
+</div>
+<div class="quote-section">
+    <p class="quote-heading">geometry complexity</p>
+    <p class="quote-desc">边数、内部变化、分叉、圆角共同决定结构复杂度</p>
+    <p class="quote-cost">structure machining: ¥${detail.structureCost.toLocaleString('zh-CN')}</p>
+</div>
+<div class="quote-section">
+    <p class="quote-heading">cut-out machining</p>
+    <p class="quote-desc">根据内部变化与分叉估算镂空面积和切削路径复杂度</p>
+    <p class="quote-desc">estimated open area: ${detail.openAreaPercent}%</p>
+    <p class="quote-cost">cut-out machining: ¥${detail.cutoutCost.toLocaleString('zh-CN')}</p>
+</div>
+<div class="quote-section">
+    <p class="quote-heading">frame / volume</p>
+    <p class="quote-desc">框粗度、胖瘦影响材料体积和加工时间</p>
+    <p class="quote-desc">material volume factor: x${detail.volumeFactor.toFixed(2)}</p>
+    <p class="quote-cost">forming cost: ¥${detail.formingCost.toLocaleString('zh-CN')}</p>
+</div>
+<div class="quote-section">
+    <p class="quote-heading">final estimate</p>
+    <p class="quote-cost">total: ¥${detail.total.toLocaleString('zh-CN')}</p>
+</div>`;
+        }
+
         updateQuote() {
-            this.animateQuoteTo(this.calculateQuote());
+            const detail = this.calculateQuote();
+            this.animateQuoteTo(detail.total);
+            this.renderQuoteBreakdown(detail);
         }
 
         generateAndUpdateModel() {
             const geometry = GeometryGenerator.generatePlateGeometry(this.geometryParams);
             const material = this.materialCtrl.createMaterial();
+            const group = new THREE.Group();
             const mesh = new THREE.Mesh(geometry, material);
-            this.scene.updateModel(mesh);
+            group.add(mesh);
+            this.scene.updateModelGroup(group);
             this.currentMesh = mesh;
             this.updateQuote();
         }
@@ -1847,15 +2061,21 @@
                 this.generateAndUpdateModel();
                 return;
             }
-            this.currentMesh.geometry.dispose();
-            this.currentMesh.geometry = geometry;
+            if (this.scene.currentModelGroup) {
+                const oldGeometry = this.scene.currentModelGroup.children[0]?.geometry;
+                this.scene.currentModelGroup.children.forEach((mesh) => { mesh.geometry = geometry; });
+                oldGeometry?.dispose?.();
+            }
             this.updateQuote();
         }
 
         updateMaterialOnly() {
-            if (this.currentMesh) {
-                this.currentMesh.material.dispose?.();
-                this.currentMesh.material = this.materialCtrl.createMaterial();
+            if (this.scene.currentModelGroup) {
+                const material = this.materialCtrl.createMaterial();
+                const oldMaterial = this.scene.currentModelGroup.children[0]?.material;
+                this.scene.currentModelGroup.children.forEach((mesh) => { mesh.material = material; });
+                oldMaterial?.dispose?.();
+                this.scene.renderer.shadowMap.needsUpdate = true;
                 this.updateQuote();
             }
         }
@@ -1897,10 +2117,12 @@
             const colorPicker = document.getElementById('color-picker');
             const roughnessSlider = document.getElementById('roughness-slider');
             const metalnessSlider = document.getElementById('metalness-slider');
+            const craftIntensitySlider = document.getElementById('craft-intensity-slider');
             const textureSelect = document.getElementById('texture-type');
             const craftButtons = Array.from(document.querySelectorAll('.craft-btn'));
             const roughnessVal = document.getElementById('roughness-value');
             const metalnessVal = document.getElementById('metalness-value');
+            const craftIntensityVal = document.getElementById('craft-intensity-value');
 
             const setCraftActive = (value) => {
                 craftButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.texture === value));
@@ -1911,10 +2133,12 @@
                     color: colorPicker.value,
                     roughness: parseFloat(roughnessSlider.value),
                     metalness: parseFloat(metalnessSlider.value),
-                    textureType: textureSelect.value
+                    textureType: textureSelect.value,
+                    craftIntensity: parseFloat(craftIntensitySlider.value)
                 });
                 roughnessVal.innerText = parseFloat(roughnessSlider.value).toFixed(2);
                 metalnessVal.innerText = parseFloat(metalnessSlider.value).toFixed(2);
+                craftIntensityVal.innerText = parseFloat(craftIntensitySlider.value).toFixed(2);
                 setCraftActive(textureSelect.value);
                 this.updateMaterialOnly();
             };
@@ -1922,6 +2146,7 @@
             colorPicker.addEventListener('input', updateMaterialFromUI);
             roughnessSlider.addEventListener('input', updateMaterialFromUI);
             metalnessSlider.addEventListener('input', updateMaterialFromUI);
+            craftIntensitySlider.addEventListener('input', updateMaterialFromUI);
             textureSelect.addEventListener('change', updateMaterialFromUI);
             craftButtons.forEach((btn) => {
                 btn.addEventListener('click', () => {
@@ -1947,22 +2172,6 @@
             modeWhite.onclick = () => setMode('white');
             modeWire.onclick = () => setMode('wireframe');
 
-            const lightIntensity = document.getElementById('light-intensity');
-            const lightIntensityVal = document.getElementById('light-intensity-value');
-            lightIntensity.addEventListener('input', (e) => {
-                const value = parseFloat(e.target.value);
-                lightIntensityVal.innerText = value.toFixed(2);
-                this.scene.setLightIntensity(value);
-            });
-
-            const lightMotionSpeed = document.getElementById('light-motion-speed');
-            const lightMotionSpeedVal = document.getElementById('light-motion-speed-value');
-            lightMotionSpeed.addEventListener('input', (e) => {
-                const value = parseFloat(e.target.value);
-                lightMotionSpeedVal.innerText = value.toFixed(2);
-                this.scene.setLightMotionSpeed(value);
-            });
-
             document.getElementById('shadow-toggle').addEventListener('change', (e) => {
                 this.scene.setShadowEnabled(e.target.checked);
             });
@@ -1970,6 +2179,19 @@
             const sendBtn = document.getElementById('send-btn');
             const chatInput = document.getElementById('chat-input');
             const messagesDiv = document.getElementById('chat-messages');
+            const priceToggle = document.getElementById('price-toggle');
+            const quoteDisplay = document.querySelector('.quote-display');
+            quoteDisplay.style.display = 'none';
+            if (priceToggle) {
+                priceToggle.classList.remove('active');
+                priceToggle.addEventListener('click', () => {
+                    const shouldShow = quoteDisplay.style.display === 'none';
+                    quoteDisplay.style.display = shouldShow ? 'block' : 'none';
+                    priceToggle.classList.toggle('active', shouldShow);
+                });
+            }
+            const quoteValue = document.getElementById('quote-value');
+            quoteValue.addEventListener('click', () => quoteDisplay.classList.toggle('expanded'));
 
             const addMessage = (text, isUser) => {
                 const div = document.createElement('div');
@@ -2179,6 +2401,7 @@
                 if (e.key === 'Enter') sendBtn.click();
             });
         }
+
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -2201,13 +2424,16 @@
 
         const sceneMgr = new SceneManager('canvas-container');
         const materialCtrl = new MaterialController({
-            color: '#c7ccd4',
-            roughness: 0.18,
+            color: '#f2f0ea',
+            roughness: 0.22,
             metalness: 0.96,
-            textureType: 'matte'
+            textureType: 'matte',
+            craftIntensity: 0.55
         });
         new UIController(sceneMgr, materialCtrl);
-        window.addEventListener('resize', () => sceneMgr.onResize());
+        window.addEventListener('resize', () => {
+            sceneMgr.onResize();
+        });
     });
 </script>
 </body>
