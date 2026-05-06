@@ -25,12 +25,16 @@
             --ink: #2f3338;
             --ink-soft: #6f757e;
             --line: rgba(120, 128, 138, 0.32);
+            --theme-color: #4a4a4a;
+            --theme-color-orb: #111111;
+            --theme-color-soft: rgba(74, 74, 74, 0.72);
+            --theme-color-line: rgba(74, 74, 74, 0.5);
             --panel: rgba(243, 243, 243, 0.92);
             --panel-strong: rgba(250, 250, 250, 0.98);
             --glow: 0 4px 14px rgba(60, 64, 70, 0.12);
             --btn: #e6e7e9;
             --btn-ink: #2a2e34;
-        }以下是我的新一轮修改意见，给我新的prompt我发给codex
+        }
 
         * {
             box-sizing: border-box;
@@ -51,17 +55,103 @@
         }
 
         body::before {
-            content: none;
+            content: "";
+            position: fixed;
+            inset: -28vmax;
+            z-index: 1;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 18% 24%, rgba(255,255,255,0.72) 0 9%, transparent 28%),
+                radial-gradient(circle at 68% 16%, color-mix(in srgb, var(--theme-color) 26%, transparent) 0 7%, transparent 24%),
+                radial-gradient(circle at 82% 70%, rgba(255,255,255,0.42) 0 8%, transparent 30%),
+                linear-gradient(112deg, transparent 0 34%, rgba(255,255,255,0.46) 43%, transparent 54% 100%);
+            opacity: 0.82;
+            filter: blur(18px);
+            mix-blend-mode: soft-light;
+            transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1.04);
+            animation: backgroundSheenDrift 18s ease-in-out infinite alternate;
         }
 
         body::after {
-            content: none;
+            content: "";
+            position: fixed;
+            right: -10vw;
+            top: 8vh;
+            width: 72vmax;
+            height: 72vmax;
+            z-index: 2;
+            pointer-events: none;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 42% 38%,
+                    color-mix(in srgb, var(--theme-color) 42%, white 58%) 0%,
+                    color-mix(in srgb, var(--theme-color) 32%, transparent) 22%,
+                    color-mix(in srgb, var(--theme-color) 18%, transparent) 44%,
+                    transparent 72%);
+            opacity: 0.72;
+            filter: blur(46px);
+            mix-blend-mode: multiply;
+            transform: translate3d(0, 0, 0) scale(1);
+            animation: backgroundDiffuseOrb 13s ease-in-out infinite alternate;
+        }
+
+        #color-orb {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: clamp(420px, 38vw, 740px);
+            height: clamp(420px, 38vw, 740px);
+            z-index: 2;
+            pointer-events: none;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 48%,
+                    color-mix(in srgb, var(--theme-color-orb) 14%, white 86%) 0%,
+                    color-mix(in srgb, var(--theme-color-orb) 28%, white 72%) 18%,
+                    color-mix(in srgb, var(--theme-color-orb) 56%, transparent) 44%,
+                    color-mix(in srgb, var(--theme-color-orb) 36%, transparent) 62%,
+                    transparent 80%);
+            opacity: 0.28;
+            filter: blur(96px);
+            mix-blend-mode: multiply;
+            transform: translate3d(var(--orb-x, 10vw), var(--orb-y, 16vh), 0) scale(0.88);
+            will-change: transform, opacity, filter;
+            animation: colorOrbBreathe 6.2s ease-in-out infinite;
+        }
+
+        #color-orb::after {
+            content: "";
+            position: absolute;
+            inset: 20%;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 50%,
+                    rgba(246, 246, 244, 0.92) 0%,
+                    color-mix(in srgb, var(--theme-color-orb) 20%, #f6f6f4 80%) 26%,
+                    color-mix(in srgb, var(--theme-color-orb) 44%, transparent) 52%,
+                    transparent 76%);
+            opacity: 0.46;
+            filter: blur(64px);
+            transform: scale(0.82);
+            animation: colorOrbInnerHighlightBreathe 5.4s ease-in-out infinite;
+        }
+
+        #color-orb::before {
+            content: "";
+            position: absolute;
+            inset: 40%;
+            border-radius: 50%;
+            background: rgba(246, 246, 244, 0.82);
+            opacity: 0.34;
+            filter: blur(48px);
+            transform: scale(0.62);
+            animation: colorOrbCenterGlowBreathe 4.8s ease-in-out infinite;
         }
 
         .bg-crosses {
             position: fixed;
             inset: 0;
-            z-index: 2;
+            z-index: 4;
             pointer-events: none;
         }
 
@@ -78,7 +168,7 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            background: rgba(55, 60, 68, 0.68);
+            background: var(--theme-color-soft);
             transform: translate(-50%, -50%);
         }
 
@@ -90,6 +180,95 @@
         .bg-cross::after {
             width: 1px;
             height: 6px;
+        }
+
+        @keyframes backgroundSheenDrift {
+            0% {
+                transform: translate3d(-4%, -2%, 0) rotate(-5deg) scale(1.03);
+                opacity: 0.62;
+            }
+            45% {
+                transform: translate3d(2%, 1.5%, 0) rotate(3deg) scale(1.08);
+                opacity: 0.88;
+            }
+            100% {
+                transform: translate3d(5%, -1%, 0) rotate(7deg) scale(1.04);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes backgroundDiffuseOrb {
+            0% {
+                transform: translate3d(-2.5%, 1.5%, 0) scale(0.94);
+                opacity: 0.56;
+            }
+            50% {
+                transform: translate3d(1.5%, -1.2%, 0) scale(1.05);
+                opacity: 0.76;
+            }
+            100% {
+                transform: translate3d(4%, -2.2%, 0) scale(1.12);
+                opacity: 0.66;
+            }
+        }
+
+        @keyframes colorOrbBreathe {
+            0% {
+                transform: translate3d(var(--orb-x, 10vw), var(--orb-y, 16vh), 0) scale(0.72);
+                opacity: 0.20;
+                filter: blur(112px);
+            }
+            42% {
+                transform: translate3d(var(--orb-x, 10vw), var(--orb-y, 16vh), 0) scale(1.28);
+                opacity: 0.44;
+                filter: blur(72px);
+            }
+            72% {
+                transform: translate3d(var(--orb-x, 10vw), var(--orb-y, 16vh), 0) scale(1.08);
+                opacity: 0.35;
+                filter: blur(88px);
+            }
+            100% {
+                transform: translate3d(var(--orb-x, 10vw), var(--orb-y, 16vh), 0) scale(0.72);
+                opacity: 0.22;
+                filter: blur(116px);
+            }
+        }
+
+        @keyframes colorOrbInnerHighlightBreathe {
+            0% {
+                transform: scale(0.58);
+                opacity: 0.48;
+                filter: blur(92px);
+            }
+            48% {
+                transform: scale(1.24);
+                opacity: 0.86;
+                filter: blur(58px);
+            }
+            100% {
+                transform: scale(0.58);
+                opacity: 0.52;
+                filter: blur(96px);
+            }
+        }
+
+        @keyframes colorOrbCenterGlowBreathe {
+            0% {
+                transform: scale(0.46);
+                opacity: 0.36;
+                filter: blur(72px);
+            }
+            46% {
+                transform: scale(1.36);
+                opacity: 0.72;
+                filter: blur(38px);
+            }
+            100% {
+                transform: scale(0.46);
+                opacity: 0.4;
+                filter: blur(76px);
+            }
         }
 
         #canvas-container {
@@ -775,7 +954,7 @@
         .quote-heading,
         .quote-desc,
         .quote-cost {
-            color: #9d9d9b !important;
+            color: var(--theme-color) !important;
         }
 
         .bg-cross::before,
@@ -784,8 +963,8 @@
         .user-message::before,
         input[type="range"]::-webkit-slider-runnable-track,
         input[type="range"]::-moz-range-track {
-            border-color: rgba(187, 187, 187, 0.5) !important;
-            background-color: rgba(187, 187, 187, 0.5);
+            border-color: var(--theme-color-line) !important;
+            background-color: var(--theme-color-line);
         }
 
         .quote-logic {
@@ -814,9 +993,127 @@
         .price-toggle.active {
             opacity: 1;
         }
+
+        .action-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .text-toggle {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            color: inherit;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            opacity: 0.72;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+
+        .text-toggle.active {
+            opacity: 1;
+        }
+
+        .signature-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(230, 232, 234, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .signature-overlay.hidden {
+            display: none !important;
+        }
+
+        .signature-panel {
+            width: min(760px, 92vw);
+            background: rgba(243, 243, 243, 0.96);
+            border: 1px solid var(--theme-color-line);
+            padding: 18px;
+        }
+
+        .signature-canvas {
+            width: 100%;
+            height: min(260px, 38vh);
+            background: transparent;
+            border: 1px solid var(--theme-color-line);
+            touch-action: none;
+            display: block;
+        }
+
+        .signature-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .signature-actions .text-toggle {
+            margin-top: 0;
+            align-self: auto;
+        }
+
+        .share-preview-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            background: rgba(230, 232, 234, 0.84);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
+        }
+
+        .share-preview-overlay.hidden {
+            display: none !important;
+        }
+
+        .share-preview-panel {
+            width: min(560px, 92vw);
+            max-height: 92vh;
+            background: rgba(243, 243, 243, 0.98);
+            border: 1px solid var(--theme-color-line);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #share-preview-image {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 3 / 4;
+            border: 1px solid var(--theme-color-line);
+            background: #efefed;
+            object-fit: contain;
+            display: block;
+        }
+
+        .share-preview-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 14px;
+        }
+
+        .share-preview-actions .text-toggle {
+            margin-top: 0;
+            align-self: auto;
+        }
     </style>
 </head>
 <body>
+<div id="color-orb"></div>
 <div class="bg-crosses" id="bg-crosses"></div>
 <div id="canvas-container"></div>
 
@@ -899,16 +1196,16 @@
             <div class="param-group">
                 <h4>2. 材质参数</h4>
                 <div class="color-preview">
-                    <input type="color" id="color-picker" value="#f2f0ea">
+                    <input type="color" id="color-picker" value="#4a4a4a">
                     <span>主体颜色</span>
                 </div>
                 <div class="slider-container">
-                    <label>粗糙度: <span id="roughness-value">0.18</span></label>
-                    <input type="range" id="roughness-slider" min="0.03" max="0.75" step="0.01" value="0.18">
+                    <label>粗糙度: <span id="roughness-value">0.34</span></label>
+                    <input type="range" id="roughness-slider" min="0.08" max="0.9" step="0.01" value="0.34">
                 </div>
                 <div class="slider-container">
-                    <label>金属度: <span id="metalness-value">0.96</span></label>
-                    <input type="range" id="metalness-slider" min="0.6" max="1" step="0.01" value="0.96">
+                    <label>金属度: <span id="metalness-value">0.72</span></label>
+                    <input type="range" id="metalness-slider" min="0.05" max="0.85" step="0.01" value="0.72">
                 </div>
                 <div class="slider-container">
                     <label class="control-label">纹理工艺</label>
@@ -951,7 +1248,10 @@
             </div>
         </div>
     </div>
-    <button type="button" class="price-toggle" id="price-toggle">显示价格</button>
+    <div class="action-links">
+        <button type="button" class="price-toggle text-toggle" id="price-toggle">显示价格</button>
+        <button type="button" class="text-toggle" id="signature-toggle">签名分享</button>
+    </div>
 </div>
 
 <aside class="quote-display" aria-live="polite">
@@ -959,6 +1259,26 @@
     <p class="quote-value" id="quote-value">¥0000</p>
     <p class="quote-label">estimated production cost</p>
 </aside>
+
+<div class="signature-overlay hidden" id="signature-overlay" aria-hidden="true">
+    <div class="signature-panel">
+        <canvas id="signature-canvas" class="signature-canvas"></canvas>
+        <div class="signature-actions">
+            <button type="button" class="text-toggle" id="signature-clear">重新签</button>
+            <button type="button" class="text-toggle" id="signature-export">导出分享卡片</button>
+        </div>
+    </div>
+</div>
+
+<div class="share-preview-overlay hidden" id="share-preview-overlay" aria-hidden="true">
+    <div class="share-preview-panel">
+        <img id="share-preview-image" alt="share preview card">
+        <div class="share-preview-actions">
+            <button type="button" class="text-toggle" id="share-preview-cancel">放弃</button>
+            <button type="button" class="text-toggle" id="share-preview-download">下载图片</button>
+        </div>
+    </div>
+</div>
 
 <script type="importmap">
     {
@@ -993,7 +1313,7 @@
             this.renderer.outputEncoding = THREE.sRGBEncoding;
             this.renderer.physicallyCorrectLights = true;
             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 1.16;
+            this.renderer.toneMappingExposure = 1.46;
             this.container.appendChild(this.renderer.domElement);
 
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -1003,6 +1323,8 @@
             this.controls.maxPolarAngle = Math.PI * 0.44;
             this.controls.minDistance = 3.6;
             this.controls.maxDistance = 10.2;
+            this.colorOrbEl = document.getElementById('color-orb');
+            this._projectVec = new THREE.Vector3();
             this.lightMotionSpeed = 0.4;
             this.setupEnvironment();
             this.currentModelGroup = null;
@@ -1055,49 +1377,55 @@
         }
 
         setupEnvironment() {
-            this.scene.add(new THREE.HemisphereLight(0xdde5f3, 0x05070a, 0.18));
+            this.scene.add(new THREE.HemisphereLight(0xdde5f3, 0x05070a, 0.08));
 
-            this.keyLight = new THREE.SpotLight(0xf1f3f6, 2.8, 34, Math.PI * 0.36, 0.78, 1.08);
-            this.keyLight.position.set(3.0, 8.4, 2.3);
+            this.keyLight = new THREE.SpotLight(0xf3f5f8, 4.25, 38, Math.PI * 0.28, 0.64, 1.15);
+            this.keyLight.position.set(6.6, 7.4, 5.4);
             this.keyLight.castShadow = true;
             this.keyLight.shadow.mapSize.width = 2048;
             this.keyLight.shadow.mapSize.height = 2048;
             this.keyLight.shadow.camera.near = 0.3;
             this.keyLight.shadow.camera.far = 22;
-            this.keyLight.shadow.radius = 22;
-            this.keyLight.shadow.bias = -0.00008;
-            this.keyLight.target.position.set(2.9, 0.22, -0.24);
+            this.keyLight.shadow.radius = 13;
+            this.keyLight.shadow.bias = -0.00015;
+            this.keyLight.target.position.set(3.8, 0.02, -0.28);
             this.scene.add(this.keyLight.target);
             this.scene.add(this.keyLight);
 
-            this.fillLight = new THREE.DirectionalLight(0xb6bcc8, 0.11);
-            this.fillLight.position.set(-4.9, 1.5, 2.1);
+            this.fillLight = new THREE.DirectionalLight(0xb6bcc8, 0.06);
+            this.fillLight.position.set(-5.2, 1.3, 2.0);
             this.scene.add(this.fillLight);
-            this.frontFillLight = new THREE.RectAreaLight(0xf9faf9, 6.2, 8.8, 5.2);
-            this.frontFillLight.position.set(7.1, 2.5, 6.8);
+            this.frontFillLight = new THREE.RectAreaLight(0xf9faf9, 2.8, 8.8, 5.2);
+            this.frontFillLight.position.set(7.0, 2.4, 6.8);
             this.frontFillLight.lookAt(3.8, 0.28, -0.28);
             this.scene.add(this.frontFillLight);
 
-            this.overheadLight = new THREE.DirectionalLight(0xf1f4f8, 0.72);
+            this.overheadLight = new THREE.DirectionalLight(0xf1f4f8, 0.36);
             this.overheadLight.position.set(2.2, 6.8, 2.0);
             this.scene.add(this.overheadLight);
 
 
-            this.rimLight = new THREE.DirectionalLight(0xc0c9da, 0.56);
-            this.rimLight.position.set(-4.1, 2.4, -5.8);
+            this.rimLight = new THREE.DirectionalLight(0xd3dded, 0.22);
+            this.rimLight.position.set(-5.2, 2.2, -7.0);
             this.scene.add(this.rimLight);
 
-            this.kickerA = new THREE.PointLight(0xd7e0ef, 0.08, 18, 2);
+            this.kickerA = new THREE.PointLight(0xd7e0ef, 0.11, 18, 2);
             this.kickerA.position.set(3.9, 1.0, -2.8);
             this.scene.add(this.kickerA);
 
-            this.kickerB = new THREE.PointLight(0xa9b2c4, 0.05, 16, 2);
+            this.kickerB = new THREE.PointLight(0xb9c4d7, 0.08, 16, 2);
             this.kickerB.position.set(-2.9, 0.8, 3.5);
             this.scene.add(this.kickerB);
 
+            this.backRimLight = new THREE.SpotLight(0xe4ebf7, 0.42, 24, Math.PI * 0.22, 0.84, 1.5);
+            this.backRimLight.position.set(-6.6, 2.7, -6.8);
+            this.backRimLight.target.position.set(3.65, 0.08, -0.28);
+            this.scene.add(this.backRimLight.target);
+            this.scene.add(this.backRimLight);
+
             const shadowPlane = new THREE.Mesh(
                 new THREE.PlaneGeometry(18, 14),
-                new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.06, transparent: true })
+                new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.115, transparent: true })
             );
             shadowPlane.rotation.x = -Math.PI / 2;
             shadowPlane.position.y = -0.558;
@@ -1109,7 +1437,7 @@
                 new THREE.MeshBasicMaterial({
                     map: this.createGroundShadowTexture(),
                     transparent: true,
-                    opacity: 0.028,
+                    opacity: 0.055,
                     depthWrite: false
                 })
             );
@@ -1135,21 +1463,24 @@
 
         setLightPosition(x, y, z) {
             this.keyLight.position.set(x, y, z);
-            this.keyLight.target.position.set(x * 0.52, 0.22, z * -0.12);
+            this.keyLight.target.position.set(x * 0.56, 0.08, z * -0.1);
             this.fillLight.position.set(-x * 1.16, Math.max(1.1, y * 0.28), z * 0.42);
             this.rimLight.position.set(-x * 0.7, Math.max(1.35, y * 0.36), -z * 1.22);
             this.kickerA.position.set(x * 0.84, 0.92, -z * 0.56);
+            this.backRimLight.position.set(-x * 0.96, Math.max(1.7, y * 0.33), -z * 2.0);
+            this.backRimLight.target.position.set(3.65, 0.08, -0.28);
             this.frontFillLight.lookAt(3.88, 0.18, -0.28);
         }
 
         setLightIntensity(value) {
             this.keyLight.intensity = value;
-            this.fillLight.intensity = value * 0.1;
-            this.overheadLight.intensity = value * 0.52;
-            this.rimLight.intensity = value * 0.36;
-            this.kickerA.intensity = value * 0.06;
-            this.kickerB.intensity = value * 0.04;
-            this.frontFillLight.intensity = value * 2.1;
+            this.fillLight.intensity = value * 0.055;
+            this.overheadLight.intensity = value * 0.24;
+            this.rimLight.intensity = value * 0.12;
+            this.kickerA.intensity = value * 0.035;
+            this.kickerB.intensity = value * 0.03;
+            this.backRimLight.intensity = value * 0.11;
+            this.frontFillLight.intensity = value * 0.66;
         }
 
         setShadowEnabled(enabled) {
@@ -1165,7 +1496,7 @@
             group.traverse((obj) => {
                 if (obj.isMesh) {
                     obj.castShadow = true;
-                    obj.receiveShadow = false;
+                    obj.receiveShadow = true;
                 }
             });
             this.scene.add(group);
@@ -1196,6 +1527,20 @@
             return new THREE.CanvasTexture(canvas);
         }
 
+        updateColorOrbFollow() {
+            if (!this.colorOrbEl || !this.currentModelGroup) return;
+            const worldPos = this.currentModelGroup.getWorldPosition(this._projectVec);
+            worldPos.project(this.camera);
+            const width = this.container.clientWidth || window.innerWidth;
+            const height = this.container.clientHeight || window.innerHeight;
+            const screenX = (worldPos.x * 0.5 + 0.5) * width;
+            const screenY = (-worldPos.y * 0.5 + 0.5) * height;
+            const offsetX = screenX - this.colorOrbEl.offsetWidth * 0.5;
+            const offsetY = screenY - this.colorOrbEl.offsetHeight * 0.5;
+            this.colorOrbEl.style.setProperty('--orb-x', `${offsetX}px`);
+            this.colorOrbEl.style.setProperty('--orb-y', `${offsetY}px`);
+        }
+
         startAnimation() {
             const animate = () => {
                 requestAnimationFrame(animate);
@@ -1203,6 +1548,7 @@
                 const x = 3 + Math.sin(t) * 3; // 0 -> 6
                 this.setLightPosition(x, 8.4, 2.3);
                 this.controls.update();
+                this.updateColorOrbFollow();
                 this.renderer.render(this.scene, this.camera);
             };
             animate();
@@ -1214,6 +1560,7 @@
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
+            this.updateColorOrbFollow();
         }
     }
 
@@ -1576,7 +1923,7 @@
         static buildShallowDishShell(topology, faces, np) {
             const radius = np.radius;
             const shellThickness = this.lerp(radius * 0.019, radius * 0.029, np.frameThickness);
-            const dishDepth = this.lerp(radius * 0.045, radius * 0.078, 0.32 + np.fatness * 0.68);
+            const dishDepth = this.lerp(radius * 0.05, radius * 0.086, 0.32 + np.fatness * 0.68);
             const rimLift = this.lerp(radius * 0.008, radius * 0.022, np.frameThickness);
             const topStore = this.createStore();
             const bottomStore = this.createStore();
@@ -1640,6 +1987,11 @@
                 ...sideStore.positions
             ]), 3));
             geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([
+                ...topStore.uvs,
+                ...bottomStore.uvs,
+                ...sideStore.uvs
+            ]), 2));
+            geometry.setAttribute('uv2', new THREE.BufferAttribute(new Float32Array([
                 ...topStore.uvs,
                 ...bottomStore.uvs,
                 ...sideStore.uvs
@@ -1777,18 +2129,18 @@
             } else if (type === 'matte') {
                 colorCtx.fillStyle = '#eeebe4';
                 colorCtx.fillRect(0, 0, width, height);
-                for (let i = 0; i < Math.floor(1400 + 3600 * craft); i++) {
+                for (let i = 0; i < Math.floor(3200 + 5200 * craft); i++) {
                     const x = Math.random() * width;
                     const y = Math.random() * height;
-                    const tone = 120 + Math.random() * 16;
-                    bumpCtx.fillStyle = `rgba(${tone},${tone},${tone},0.11)`;
+                    const tone = 114 + Math.random() * 24;
+                    bumpCtx.fillStyle = `rgba(${tone},${tone},${tone},0.2)`;
                     bumpCtx.fillRect(x, y, 1, 1);
-                    const r = 120 + Math.random() * 36;
-                    roughCtx.fillStyle = `rgba(${r},${r},${r},0.16)`;
+                    const r = 108 + Math.random() * 56;
+                    roughCtx.fillStyle = `rgba(${r},${r},${r},0.24)`;
                     roughCtx.fillRect(x, y, 1, 1);
                 }
                 repeat = [1.7, 1.7];
-                bumpScale = 0.01 + 0.06 * craft;
+                bumpScale = 0.03 + 0.08 * craft;
                 roughnessBias = 0.1 + 0.18 * craft;
                 metalnessBias = -0.07 - 0.07 * craft;
             } else if (type === 'sandblasted') {
@@ -1798,14 +2150,14 @@
                     const x = Math.random() * width;
                     const y = Math.random() * height;
                     const t = 100 + Math.random() * 70;
-                    const a = 0.2 + Math.random() * 0.28;
+                    const a = 0.24 + Math.random() * 0.34;
                     bumpCtx.fillStyle = `rgba(${t},${t},${t},${a})`;
                     bumpCtx.fillRect(x, y, 1.2, 1.2);
-                    roughCtx.fillStyle = `rgba(${130 + Math.random() * 55},${130 + Math.random() * 55},${130 + Math.random() * 55},0.24)`;
+                    roughCtx.fillStyle = `rgba(${124 + Math.random() * 62},${124 + Math.random() * 62},${124 + Math.random() * 62},0.32)`;
                     roughCtx.fillRect(x, y, 1.2, 1.2);
                 }
                 repeat = [2.8, 2.8];
-                bumpScale = 0.02 + 0.14 * craft;
+                bumpScale = 0.04 + 0.16 * craft;
                 roughnessBias = 0.1 + 0.16 * craft;
                 metalnessBias = -0.05 - 0.06 * craft;
             } else if (type === 'florentine') {
@@ -1850,6 +2202,7 @@
                 map: this.canvasTexture(canvases.color, repeat[0], repeat[1]),
                 bumpMap: this.canvasTexture(canvases.bump, repeat[0], repeat[1]),
                 roughnessMap: this.canvasTexture(canvases.roughness, repeat[0], repeat[1]),
+                aoMap: this.canvasTexture(canvases.bump, repeat[0] * 0.9, repeat[1] * 0.9),
                 bumpScale,
                 roughnessBias,
                 metalnessBias
@@ -1875,6 +2228,10 @@
             }
             roughness = THREE.MathUtils.clamp(roughness, 0.03, 1);
             metalness = THREE.MathUtils.clamp(metalness, 0, 1);
+            if (this.mode === 'real') {
+                roughness = THREE.MathUtils.clamp(roughness, 0.28, 0.42);
+                metalness = THREE.MathUtils.clamp(metalness, 0.65, 0.8);
+            }
             const brushedLike = ['brushed', 'florentine'].includes(this.textureType);
             const diffuseLike = ['matte', 'sandblasted'].includes(this.textureType);
 
@@ -1884,13 +2241,17 @@
                 metalness,
                 map: texturePack?.map || null,
                 bumpMap: texturePack?.bumpMap || null,
-                bumpScale: texturePack?.bumpScale || 0,
+                bumpScale: texturePack ? texturePack.bumpScale * 1.42 : 0,
                 roughnessMap: texturePack?.roughnessMap || null,
+                aoMap: texturePack?.aoMap || null,
+                aoMapIntensity: this.mode === 'real' ? 0.82 : 0.28,
                 vertexColors: true,
                 side: THREE.DoubleSide,
                 flatShading: this.mode !== 'real',
-                clearcoat: this.mode === 'real' ? (diffuseLike ? 0.1 : brushedLike ? 0.2 : 0.16) : 0.03,
-                clearcoatRoughness: diffuseLike ? 0.5 : brushedLike ? 0.34 : 0.4
+                clearcoat: this.mode === 'real' ? (diffuseLike ? 0.02 : brushedLike ? 0.04 : 0.03) : 0.02,
+                clearcoatRoughness: diffuseLike ? 0.76 : brushedLike ? 0.66 : 0.7,
+                envMapIntensity: this.mode === 'real' ? (diffuseLike ? 0.36 : brushedLike ? 0.46 : 0.4) : 0.14,
+                reflectivity: this.mode === 'real' ? (diffuseLike ? 0.44 : brushedLike ? 0.5 : 0.47) : 0.2
             });
 
             material.wireframe = this.mode === 'wireframe';
@@ -1930,8 +2291,306 @@
                 plateRadiusMm: 210
             };
             this.quoteState = { current: 0, target: 0, raf: null };
+            this.signatureState = {
+                isDrawing: false,
+                hasStroke: false,
+                ctx: null,
+                canvas: null
+            };
             this.initEventListeners();
             this.generateAndUpdateModel();
+        }
+
+        hexToRgba(hex, alpha = 1) {
+            const clean = (hex || '#4a4a4a').replace('#', '');
+            const valid = /^[0-9a-fA-F]{6}$/.test(clean) ? clean : '4a4a4a';
+            const r = parseInt(valid.slice(0, 2), 16);
+            const g = parseInt(valid.slice(2, 4), 16);
+            const b = parseInt(valid.slice(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        getThemeColor() {
+            const value = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim();
+            return value || '#4a4a4a';
+        }
+
+        drawCardCrosses(ctx, width, height, color) {
+            const rows = 7;
+            const cols = 7;
+            const padX = width * 0.07;
+            const padY = height * 0.08;
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.2;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = padX + (c / (cols - 1)) * (width - padX * 2);
+                    const y = padY + (r / (rows - 1)) * (height - padY * 2);
+                    ctx.beginPath();
+                    ctx.moveTo(x - 4, y);
+                    ctx.lineTo(x + 4, y);
+                    ctx.moveTo(x, y - 4);
+                    ctx.lineTo(x, y + 4);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
+
+        imageFromDataURL(dataURL) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = dataURL;
+            });
+        }
+
+        wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            let currentY = y;
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line ? `${line} ${words[i]}` : words[i];
+                const testWidth = ctx.measureText(testLine).width;
+                if (testWidth > maxWidth && line) {
+                    ctx.fillText(line, x, currentY);
+                    line = words[i];
+                    currentY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line) ctx.fillText(line, x, currentY);
+            return currentY + lineHeight;
+        }
+
+        fillTextWithLetterSpacing(ctx, text, x, y, letterSpacing = 0) {
+            let cursorX = x;
+            for (const ch of text) {
+                ctx.fillText(ch, cursorX, y);
+                cursorX += ctx.measureText(ch).width + letterSpacing;
+            }
+            return cursorX;
+        }
+
+        measureTextWithLetterSpacing(ctx, text, letterSpacing = 0) {
+            if (!text) return 0;
+            let width = 0;
+            for (let i = 0; i < text.length; i++) {
+                width += ctx.measureText(text[i]).width;
+                if (i < text.length - 1) width += letterSpacing;
+            }
+            return width;
+        }
+
+        wrapTextTight(ctx, text, x, y, maxWidth, lineHeight, letterSpacing = 0) {
+            const words = text.split(' ');
+            let line = '';
+            let currentY = y;
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line ? `${line} ${words[i]}` : words[i];
+                const testWidth = this.measureTextWithLetterSpacing(ctx, testLine, letterSpacing);
+                if (testWidth > maxWidth && line) {
+                    this.fillTextWithLetterSpacing(ctx, line, x, currentY, letterSpacing);
+                    line = words[i];
+                    currentY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line) this.fillTextWithLetterSpacing(ctx, line, x, currentY, letterSpacing);
+            return currentY + lineHeight;
+        }
+
+        async renderCleanVesselImage(size = 1120) {
+            const renderer = this.scene.renderer;
+            const camera = this.scene.camera;
+            const controls = this.scene.controls;
+            const oldSize = renderer.getSize(new THREE.Vector2());
+            const oldPixelRatio = renderer.getPixelRatio();
+            const oldAspect = camera.aspect;
+            const oldPosition = camera.position.clone();
+            const oldRotation = camera.rotation.clone();
+            const oldQuaternion = camera.quaternion.clone();
+            const oldTarget = controls.target.clone();
+
+            renderer.setPixelRatio(1);
+            renderer.setSize(size, size, false);
+            camera.aspect = 1;
+            camera.position.copy(oldPosition);
+            camera.rotation.copy(oldRotation);
+            controls.target.copy(oldTarget);
+            camera.lookAt(controls.target);
+            camera.updateProjectionMatrix();
+            controls.update();
+            renderer.render(this.scene.scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+
+            renderer.setPixelRatio(oldPixelRatio);
+            renderer.setSize(oldSize.x, oldSize.y, false);
+            camera.aspect = oldAspect;
+            camera.position.copy(oldPosition);
+            camera.rotation.copy(oldRotation);
+            camera.quaternion.copy(oldQuaternion);
+            controls.target.copy(oldTarget);
+            camera.lookAt(controls.target);
+            camera.updateProjectionMatrix();
+            controls.update();
+            renderer.render(this.scene.scene, camera);
+            return this.imageFromDataURL(dataURL);
+        }
+
+        resizeSignatureCanvas() {
+            const canvas = this.signatureState.canvas;
+            if (!canvas) return;
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.floor(rect.width * ratio);
+            canvas.height = Math.floor(rect.height * ratio);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(ratio, ratio);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 2.4;
+            ctx.strokeStyle = this.getThemeColor();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            this.signatureState.ctx = ctx;
+            this.signatureState.hasStroke = false;
+        }
+
+        setupSignaturePad() {
+            const overlay = document.getElementById('signature-overlay');
+            const canvas = document.getElementById('signature-canvas');
+            const clearBtn = document.getElementById('signature-clear');
+            const exportBtn = document.getElementById('signature-export');
+            const toggleBtn = document.getElementById('signature-toggle');
+            const previewOverlay = document.getElementById('share-preview-overlay');
+            const previewImage = document.getElementById('share-preview-image');
+            const previewCancel = document.getElementById('share-preview-cancel');
+            const previewDownload = document.getElementById('share-preview-download');
+            this.signatureState.canvas = canvas;
+            this.resizeSignatureCanvas();
+
+            const closePreview = () => {
+                previewOverlay.classList.add('hidden');
+                previewOverlay.setAttribute('aria-hidden', 'true');
+                previewImage.removeAttribute('src');
+            };
+            const openPreview = (dataURL) => {
+                previewImage.src = dataURL;
+                previewOverlay.classList.remove('hidden');
+                previewOverlay.setAttribute('aria-hidden', 'false');
+            };
+
+            const getPos = (event) => {
+                const rect = canvas.getBoundingClientRect();
+                return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+            };
+            const start = (event) => {
+                const ctx = this.signatureState.ctx;
+                if (!ctx) return;
+                event.preventDefault();
+                this.signatureState.isDrawing = true;
+                const p = getPos(event);
+                ctx.strokeStyle = this.getThemeColor();
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+            };
+            const move = (event) => {
+                if (!this.signatureState.isDrawing) return;
+                event.preventDefault();
+                const ctx = this.signatureState.ctx;
+                const p = getPos(event);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                this.signatureState.hasStroke = true;
+            };
+            const end = () => {
+                this.signatureState.isDrawing = false;
+            };
+
+            canvas.addEventListener('pointerdown', start);
+            canvas.addEventListener('pointermove', move);
+            canvas.addEventListener('pointerup', end);
+            canvas.addEventListener('pointerleave', end);
+            canvas.addEventListener('pointercancel', end);
+
+            clearBtn.addEventListener('click', () => this.resizeSignatureCanvas());
+            toggleBtn.addEventListener('click', () => {
+                overlay.classList.remove('hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+                this.resizeSignatureCanvas();
+            });
+            overlay.addEventListener('click', (event) => {
+                if (event.target !== overlay) return;
+                overlay.classList.add('hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+            });
+            previewOverlay.addEventListener('click', (event) => {
+                if (event.target !== previewOverlay) return;
+                closePreview();
+            });
+            previewCancel.addEventListener('click', closePreview);
+            previewDownload.addEventListener('click', () => {
+                if (!previewImage.src) return;
+                const a = document.createElement('a');
+                a.href = previewImage.src;
+                a.download = 'my-vessel-card.png';
+                a.click();
+            });
+
+            exportBtn.addEventListener('click', async () => {
+                const width = 900;
+                const height = 1200;
+                const pad = 48;
+                const card = document.createElement('canvas');
+                card.width = width;
+                card.height = height;
+                const ctx = card.getContext('2d');
+                const themeColor = this.getThemeColor();
+                const softColor = this.hexToRgba(themeColor, 0.5);
+
+                ctx.fillStyle = '#efefed';
+                ctx.fillRect(0, 0, width, height);
+                this.drawCardCrosses(ctx, width, height, softColor);
+
+                ctx.fillStyle = this.hexToRgba(themeColor, 0.92);
+                ctx.textBaseline = 'top';
+                ctx.font = '140px "Old Standard TT Local", "Times New Roman", serif';
+                const titleLetterSpacing = -9;
+                this.fillTextWithLetterSpacing(ctx, 'the', pad, 56, titleLetterSpacing);
+                this.fillTextWithLetterSpacing(ctx, 'unbounded', pad, 176, titleLetterSpacing);
+                this.fillTextWithLetterSpacing(ctx, 'vessel', pad, 296, titleLetterSpacing);
+
+                ctx.font = '30px "Old Standard TT Local", "Times New Roman", serif';
+                const subtitle = 'A quiet parametric vessel study, shaped through restrained geometry, material tension, and subtle industrial craft.';
+                this.wrapTextTight(ctx, subtitle, pad, 430, 520, 40, -1.4);
+
+                const vesselImg = await this.renderCleanVesselImage(1120);
+                const vesselScale = 0.72;
+                const vesselW = vesselImg.width * vesselScale;
+                const vesselH = vesselImg.height * vesselScale;
+                const vesselX = width * 0.32;
+                const vesselY = height * 0.17;
+                ctx.drawImage(vesselImg, vesselX, vesselY, vesselW, vesselH);
+
+                const signCanvas = this.signatureState.canvas;
+                if (signCanvas && this.signatureState.hasStroke) {
+                    ctx.drawImage(signCanvas, 520, 980, 430, 240);
+                }
+
+                ctx.fillStyle = this.hexToRgba(themeColor, 0.92);
+                ctx.font = '80px "Old Standard TT Local", "Times New Roman", serif';
+                this.fillTextWithLetterSpacing(ctx, 'Share!', pad, height - 126, -4);
+                openPreview(card.toDataURL('image/png'));
+            });
+
+            window.addEventListener('resize', () => {
+                if (!overlay.classList.contains('hidden')) this.resizeSignatureCanvas();
+            });
         }
 
         calculateQuote() {
@@ -2128,6 +2787,23 @@
                 craftButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.texture === value));
             };
 
+            const syncThemeColor = (hex) => {
+                const value = hex || '#4a4a4a';
+                const normalized = value.replace('#', '');
+                const validHex = /^[0-9a-fA-F]{6}$/.test(normalized) ? normalized : '4a4a4a';
+                const r = parseInt(validHex.slice(0, 2), 16);
+                const g = parseInt(validHex.slice(2, 4), 16);
+                const b = parseInt(validHex.slice(4, 6), 16);
+                const darken = 0.45;
+                const orbR = Math.round(r * darken);
+                const orbG = Math.round(g * darken);
+                const orbB = Math.round(b * darken);
+                document.documentElement.style.setProperty('--theme-color', `#${validHex}`);
+                document.documentElement.style.setProperty('--theme-color-orb', `rgb(${orbR}, ${orbG}, ${orbB})`);
+                document.documentElement.style.setProperty('--theme-color-soft', `rgba(${r}, ${g}, ${b}, 0.72)`);
+                document.documentElement.style.setProperty('--theme-color-line', `rgba(${r}, ${g}, ${b}, 0.5)`);
+            };
+
             const updateMaterialFromUI = () => {
                 this.materialCtrl.updateParams({
                     color: colorPicker.value,
@@ -2136,6 +2812,7 @@
                     textureType: textureSelect.value,
                     craftIntensity: parseFloat(craftIntensitySlider.value)
                 });
+                syncThemeColor(colorPicker.value);
                 roughnessVal.innerText = parseFloat(roughnessSlider.value).toFixed(2);
                 metalnessVal.innerText = parseFloat(metalnessSlider.value).toFixed(2);
                 craftIntensityVal.innerText = parseFloat(craftIntensitySlider.value).toFixed(2);
@@ -2154,6 +2831,7 @@
                     textureSelect.dispatchEvent(new Event('change'));
                 });
             });
+            syncThemeColor(colorPicker.value);
 
             const modeReal = document.getElementById('mode-real');
             const modeWhite = document.getElementById('mode-white');
@@ -2192,6 +2870,7 @@
             }
             const quoteValue = document.getElementById('quote-value');
             quoteValue.addEventListener('click', () => quoteDisplay.classList.toggle('expanded'));
+            this.setupSignaturePad();
 
             const addMessage = (text, isUser) => {
                 const div = document.createElement('div');
@@ -2322,7 +3001,7 @@
 
                 const metalnessMatch = lower.match(/(?:金属度|metalness)\s*([\d.]+)/);
                 if (metalnessMatch) {
-                    const value = clamp(parseFloat(metalnessMatch[1]), 0.6, 1);
+                    const value = clamp(parseFloat(metalnessMatch[1]), 0.05, 0.85);
                     metalnessSlider.value = value;
                     metalnessSlider.dispatchEvent(new Event('input'));
                     feedback.push(`金属度已调整到 ${value.toFixed(2)}。`);
@@ -2424,9 +3103,9 @@
 
         const sceneMgr = new SceneManager('canvas-container');
         const materialCtrl = new MaterialController({
-            color: '#f2f0ea',
-            roughness: 0.22,
-            metalness: 0.96,
+            color: '#4a4a4a',
+            roughness: 0.34,
+            metalness: 0.38,
             textureType: 'matte',
             craftIntensity: 0.55
         });
